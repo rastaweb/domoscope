@@ -656,12 +656,12 @@ console.log(allElements.length); // 2 (div + p)
 
 ```mermaid
 flowchart TD
-    A[HTML String] --> B[Create temp container]
-    B --> C[Set innerHTML]
-    C --> D[Extract root elements]
-    D --> E[Recursive traverse]
-    E --> F[Build allElements array]
-    F --> G[Return {rootElements, allElements}]
+    A["HTML String"] --> B["Create temp container"]
+    B --> C["Set innerHTML"]
+    C --> D["Extract root elements"]
+    D --> E["Recursive traverse"]
+    E --> F["Build allElements array"]
+    F --> G["Return rootElements + allElements"]
 ```
 
 ## 📚 Detailed Algorithm Documentation
@@ -754,17 +754,17 @@ function elementSimilarity(a: Element, b: Element): number {
 
 ```mermaid
 flowchart LR
-    A[Input Arrays] --> B{Size Check}
-    B -->|Small Arrays<br/>n,m < 1000| C[Standard DP<br/>O(n×m) space]
-    B -->|Large Arrays<br/>n,m ≥ 1000| D[Space-Optimized<br/>O(min(n,m)) space]
+    A["Input Arrays"] --> B{"Size Check"}
+    B -->|"Small Arrays n,m < 1000"| C["Standard DP O(n×m) space"]
+    B -->|"Large Arrays n,m ≥ 1000"| D["Space-Optimized O(min(n,m)) space"]
 
-    C --> E[Memoization Check]
-    D --> F[Direct Computation]
+    C --> E["Memoization Check"]
+    D --> F["Direct Computation"]
 
-    E -->|Cache Hit| G[Return Cached]
-    E -->|Cache Miss| H[Compute & Cache]
+    E -->|"Cache Hit"| G["Return Cached"]
+    E -->|"Cache Miss"| H["Compute & Cache"]
 
-    G --> I[LCS Matches]
+    G --> I["LCS Matches"]
     H --> I
     F --> I
 ```
