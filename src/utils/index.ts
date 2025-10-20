@@ -44,6 +44,28 @@ export function wrapElement(
 }
 
 /**
+ * Wrap an element with a wrapper element and return the wrapper
+ * Used when we need to set additional attributes on the wrapper
+ */
+export function wrapElementWithData(
+  element: Element,
+  className: string | undefined,
+  wrapperTag = 'span'
+): Element | null {
+  const parent = element.parentNode;
+  if (!parent) return null; // Element is detached
+
+  const wrapper = document.createElement(wrapperTag);
+  if (className) {
+    wrapper.className = className;
+  }
+
+  parent.replaceChild(wrapper, element);
+  wrapper.appendChild(element);
+  return wrapper;
+}
+
+/**
  * Replace a text node with a wrapped version containing diff styling
  */
 export function replaceTextNodeWithWrapped(
@@ -271,8 +293,31 @@ export function detectAndWrapElementChange(
       // User opted out of wrapping
     } else {
       // Default wrapping for tag changes
-      wrapElement(oldElement, `${elementClass} diff-tag-changed`, wrapperTag);
-      wrapElement(newElement, `${elementClass} diff-tag-changed`, wrapperTag);
+      const oldWrapper = wrapElementWithData(
+        oldElement,
+        `${elementClass} diff-tag-changed`,
+        wrapperTag
+      );
+      const newWrapper = wrapElementWithData(
+        newElement,
+        `${elementClass} diff-tag-changed`,
+        wrapperTag
+      );
+
+      // Copy data attributes to wrapper for statistics collection
+      if (oldWrapper) {
+        const tagName = oldElement.getAttribute('data-diff-tag-name');
+        const changedAttrs = oldElement.getAttribute('data-diff-changed-attrs');
+        if (tagName) oldWrapper.setAttribute('data-diff-tag-name', tagName);
+        if (changedAttrs) oldWrapper.setAttribute('data-diff-changed-attrs', changedAttrs);
+      }
+
+      if (newWrapper) {
+        const tagName = newElement.getAttribute('data-diff-tag-name');
+        const changedAttrs = newElement.getAttribute('data-diff-changed-attrs');
+        if (tagName) newWrapper.setAttribute('data-diff-tag-name', tagName);
+        if (changedAttrs) newWrapper.setAttribute('data-diff-changed-attrs', changedAttrs);
+      }
     }
   } else if (attributesChanged) {
     const changeType = 'attribute' as const;
@@ -299,8 +344,23 @@ export function detectAndWrapElementChange(
       // User opted out of wrapping
     } else {
       // Default wrapping for attribute changes
-      wrapElement(oldElement, attributeClass, wrapperTag);
-      wrapElement(newElement, attributeClass, wrapperTag);
+      const oldWrapper = wrapElementWithData(oldElement, attributeClass, wrapperTag);
+      const newWrapper = wrapElementWithData(newElement, attributeClass, wrapperTag);
+
+      // Copy data attributes to wrapper for statistics collection
+      if (oldWrapper) {
+        const tagName = oldElement.getAttribute('data-diff-tag-name');
+        const changedAttrs = oldElement.getAttribute('data-diff-changed-attrs');
+        if (tagName) oldWrapper.setAttribute('data-diff-tag-name', tagName);
+        if (changedAttrs) oldWrapper.setAttribute('data-diff-changed-attrs', changedAttrs);
+      }
+
+      if (newWrapper) {
+        const tagName = newElement.getAttribute('data-diff-tag-name');
+        const changedAttrs = newElement.getAttribute('data-diff-changed-attrs');
+        if (tagName) newWrapper.setAttribute('data-diff-tag-name', tagName);
+        if (changedAttrs) newWrapper.setAttribute('data-diff-changed-attrs', changedAttrs);
+      }
     }
   }
 }
