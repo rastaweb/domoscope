@@ -2,7 +2,7 @@ export function stringToFlatTree(html: string): {
   rootElements: Element[];
   allElements: Element[];
 } {
-  const wrapper = document.createElement("div");
+  const wrapper = document.createElement('div');
   wrapper.innerHTML = html.trim();
 
   const allElements: Element[] = [];
@@ -17,7 +17,7 @@ export function stringToFlatTree(html: string): {
 
   return { rootElements, allElements };
 }
-export type TokenType = "equal" | "added" | "removed";
+export type TokenType = 'equal' | 'added' | 'removed';
 
 export type Token = {
   type: TokenType;
@@ -56,7 +56,7 @@ export type CompareOptions = {
   onElementChange?: (
     oldEl: Element | null,
     newEl: Element | null,
-    changeType: "tag" | "attribute" | "tag-added" | "tag-removed",
+    changeType: 'tag' | 'attribute' | 'tag-added' | 'tag-removed',
     changedAttrs?: string[]
   ) => void | Element | null;
 
@@ -106,7 +106,8 @@ export function compareElements(
     let bestScore = -Infinity;
     for (const c of candidates) {
       let s = elementSimilarity(c, newEl);
-      if (c.tagName === newEl.tagName) s += 1; // prefer same tag
+      if (c.tagName === newEl.tagName)
+        s += 1; // prefer same tag
       else s -= 0.2; // slight penalty for tag mismatch
       if (s > bestScore) {
         bestScore = s;
@@ -123,11 +124,11 @@ export function compareElements(
       // Check watched tags: if this tag is watched treat as a "tag-added" event and wrap/call callback.
       const tagLower = newEl.tagName.toLowerCase();
       if (watchedSet && watchedSet.has(tagLower)) {
-        const wrapperTag = options.wrapperTag ?? "span";
-        const elemClass = options.elementChangeClass ?? "diff-elem-changed";
+        const wrapperTag = options.wrapperTag ?? 'span';
+        const elemClass = options.elementChangeClass ?? 'diff-elem-changed';
         const cb = options.onElementChange;
         let cbResult: Element | null | void = undefined;
-        if (cb) cbResult = cb(null, newEl, "tag-added");
+        if (cb) cbResult = cb(null, newEl, 'tag-added');
         if (cbResult instanceof Element) {
           const parentNew = newEl.parentNode;
           if (parentNew) {
@@ -142,9 +143,9 @@ export function compareElements(
         }
       } else {
         // mark all text descendants as added
-        markDescendantTextNodes(newEl, "added", options);
+        markDescendantTextNodes(newEl, 'added', options);
         // NEW FEATURE: Store tag info for statistics
-        newEl.setAttribute("data-diff-added-tag", newEl.tagName.toLowerCase());
+        newEl.setAttribute('data-diff-added-tag', newEl.tagName.toLowerCase());
       }
     }
   }
@@ -154,12 +155,12 @@ export function compareElements(
     // If this old element is a watched tag, wrap it first (caller may want to style the removed tag)
     const tagLower = oldEl.tagName.toLowerCase();
     if (watchedSet && watchedSet.has(tagLower)) {
-      const wrapperTag = options.wrapperTag ?? "span";
+      const wrapperTag = options.wrapperTag ?? 'span';
       // For removals we use removedClass per spec (or fallback to diff-removed)
-      const removedCls = options.removedClass ?? "diff-removed";
+      const removedCls = options.removedClass ?? 'diff-removed';
       const cb = options.onElementChange;
       let cbResult: Element | null | void = undefined;
-      if (cb) cbResult = cb(oldEl, null, "tag-removed");
+      if (cb) cbResult = cb(oldEl, null, 'tag-removed');
       if (cbResult instanceof Element) {
         const parentOld = oldEl.parentNode;
         if (parentOld) {
@@ -173,11 +174,11 @@ export function compareElements(
         wrapElement(oldEl, removedCls, wrapperTag);
       }
       // After wrapping the element itself, mark descendant text nodes removed
-      markDescendantTextNodes(oldEl, "removed", options);
+      markDescendantTextNodes(oldEl, 'removed', options);
     } else {
-      markDescendantTextNodes(oldEl, "removed", options);
+      markDescendantTextNodes(oldEl, 'removed', options);
       // NEW FEATURE: Store tag info for statistics
-      oldEl.setAttribute("data-diff-removed-tag", oldEl.tagName.toLowerCase());
+      oldEl.setAttribute('data-diff-removed-tag', oldEl.tagName.toLowerCase());
     }
   }
 }
@@ -222,19 +223,19 @@ function compareNode(oldEl: Element, newEl: Element, options: CompareOptions) {
       // old-only => removed
       const oldNode = oldChildren[oi++];
       if (oldNode.nodeType === Node.TEXT_NODE) {
-        replaceTextNodeWithWrapped(oldNode as Text, "removed", options);
+        replaceTextNodeWithWrapped(oldNode as Text, 'removed', options);
       } else {
         // element node wholly removed => mark its descendant text nodes removed
-        markDescendantTextNodes(oldNode as Element, "removed", options);
+        markDescendantTextNodes(oldNode as Element, 'removed', options);
       }
     }
     while (ni < (newMatchIndex ?? newChildren.length)) {
       // new-only => added
       const newNode = newChildren[ni++];
       if (newNode.nodeType === Node.TEXT_NODE) {
-        replaceTextNodeWithWrapped(newNode as Text, "added", options);
+        replaceTextNodeWithWrapped(newNode as Text, 'added', options);
       } else {
-        markDescendantTextNodes(newNode as Element, "added", options);
+        markDescendantTextNodes(newNode as Element, 'added', options);
       }
     }
 
@@ -244,40 +245,34 @@ function compareNode(oldEl: Element, newEl: Element, options: CompareOptions) {
       const oldNode = oldChildren[oiMatch];
       const newNode = newChildren[niMatch];
 
-      if (
-        oldNode.nodeType === Node.TEXT_NODE &&
-        newNode.nodeType === Node.TEXT_NODE
-      ) {
+      if (oldNode.nodeType === Node.TEXT_NODE && newNode.nodeType === Node.TEXT_NODE) {
         // word-level diff and replace each text node with fragments:
-        const oldText = oldNode.textContent || "";
-        const newText = newNode.textContent || "";
+        const oldText = oldNode.textContent || '';
+        const newText = newNode.textContent || '';
         if (oldText.trim() === newText.trim()) {
           // identical text -> leave both text nodes alone
         } else {
           const tokens = computeWordDiff(oldText, newText);
-          const newFrag = fragmentFromTokens(tokens, "new", options);
-          const oldFrag = fragmentFromTokens(tokens, "old", options);
+          const newFrag = fragmentFromTokens(tokens, 'new', options);
+          const oldFrag = fragmentFromTokens(tokens, 'old', options);
           newNode.parentNode?.replaceChild(newFrag, newNode);
           oldNode.parentNode?.replaceChild(oldFrag, oldNode);
         }
-      } else if (
-        oldNode.nodeType === Node.ELEMENT_NODE &&
-        newNode.nodeType === Node.ELEMENT_NODE
-      ) {
+      } else if (oldNode.nodeType === Node.ELEMENT_NODE && newNode.nodeType === Node.ELEMENT_NODE) {
         // both elements - even if tagName differs we've potentially wrapped above -
         // recurse into children to handle inner diffs
         compareNode(oldNode as Element, newNode as Element, options);
       } else {
         // different kinds but matched by key - as a fallback mark old removed, new added
         if (oldNode.nodeType === Node.TEXT_NODE) {
-          replaceTextNodeWithWrapped(oldNode as Text, "removed", options);
+          replaceTextNodeWithWrapped(oldNode as Text, 'removed', options);
         } else {
-          markDescendantTextNodes(oldNode as Element, "removed", options);
+          markDescendantTextNodes(oldNode as Element, 'removed', options);
         }
         if (newNode.nodeType === Node.TEXT_NODE) {
-          replaceTextNodeWithWrapped(newNode as Text, "added", options);
+          replaceTextNodeWithWrapped(newNode as Text, 'added', options);
         } else {
-          markDescendantTextNodes(newNode as Element, "added", options);
+          markDescendantTextNodes(newNode as Element, 'added', options);
         }
       }
       oi = oiMatch + 1;
@@ -299,27 +294,23 @@ function isRelevantNode(n: Node) {
 }
 
 function nodeKey(n: Node) {
-  if (n.nodeType === Node.TEXT_NODE) return "T";
-  return "E:" + (n as Element).tagName;
+  if (n.nodeType === Node.TEXT_NODE) return 'T';
+  return 'E:' + (n as Element).tagName;
 }
 
 /**
  * Replace a single text node with a fragment that wraps the whole text
  * in added/removed span (used when an entire text node is new/removed).
  */
-function replaceTextNodeWithWrapped(
-  txt: Text,
-  mode: "added" | "removed",
-  options: CompareOptions
-) {
+function replaceTextNodeWithWrapped(txt: Text, mode: 'added' | 'removed', options: CompareOptions) {
   const cls =
-    mode === "added"
-      ? options.addedClass ?? "diff-added"
-      : options.removedClass ?? "diff-removed";
+    mode === 'added'
+      ? (options.addedClass ?? 'diff-added')
+      : (options.removedClass ?? 'diff-removed');
   const frag = document.createDocumentFragment();
-  const span = document.createElement("span");
+  const span = document.createElement('span');
   span.className = cls;
-  span.textContent = ` ${txt.textContent ?? ""} `;
+  span.textContent = ` ${txt.textContent ?? ''} `;
   frag.appendChild(span);
   txt.parentNode?.replaceChild(frag, txt);
 }
@@ -328,11 +319,7 @@ function replaceTextNodeWithWrapped(
  * Traverse an element and wrap every descendant TEXT_NODE with the given mode.
  * Preserves element nodes and attributes.
  */
-function markDescendantTextNodes(
-  el: Element,
-  mode: "added" | "removed",
-  options: CompareOptions
-) {
+function markDescendantTextNodes(el: Element, mode: 'added' | 'removed', options: CompareOptions) {
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
   const textNodes: Text[] = [];
   let curr = walker.nextNode();
@@ -351,28 +338,24 @@ function markDescendantTextNodes(
  * 'new' view shows equal + added (wrap added), 'old' shows equal + removed (wrap removed).
  * We never write innerHTML; we use textContent and element creation.
  */
-function fragmentFromTokens(
-  tokens: Token[],
-  target: "old" | "new",
-  options: CompareOptions
-) {
+function fragmentFromTokens(tokens: Token[], target: 'old' | 'new', options: CompareOptions) {
   const frag = document.createDocumentFragment();
-  const addedCls = options.addedClass ?? "diff-added";
-  const removedCls = options.removedClass ?? "diff-removed";
+  const addedCls = options.addedClass ?? 'diff-added';
+  const removedCls = options.removedClass ?? 'diff-removed';
 
   let first = true;
   for (const t of tokens) {
-    if (t.type === "equal") {
+    if (t.type === 'equal') {
       // preserve spacing between tokens by creating text nodes with trailing space
       appendTextNode(frag, t.text, first);
-    } else if (t.type === "added" && target === "new") {
-      const sp = document.createElement("span");
+    } else if (t.type === 'added' && target === 'new') {
+      const sp = document.createElement('span');
       sp.className = addedCls;
       sp.textContent = ` ${t.text} `;
       frag.appendChild(sp);
       first = false;
-    } else if (t.type === "removed" && target === "old") {
-      const sp = document.createElement("span");
+    } else if (t.type === 'removed' && target === 'old') {
+      const sp = document.createElement('span');
       sp.className = removedCls;
       sp.textContent = ` ${t.text} `;
       frag.appendChild(sp);
@@ -382,15 +365,11 @@ function fragmentFromTokens(
   }
 
   // ensure there is at least an empty text node so parent structure remains consistent
-  if (!frag.firstChild) frag.appendChild(document.createTextNode(""));
+  if (!frag.firstChild) frag.appendChild(document.createTextNode(''));
   return frag;
 }
 
-function appendTextNode(
-  frag: DocumentFragment,
-  txt: string,
-  _isFirst: boolean
-) {
+function appendTextNode(frag: DocumentFragment, txt: string, _isFirst: boolean) {
   // tokens were merged to retain spaces; just append with a leading space when appropriate
   const value = txt;
   frag.appendChild(document.createTextNode(value));
@@ -414,8 +393,8 @@ function elementSimilarity(a: Element, b: Element) {
   for (const c of aClasses) if (bClasses.has(c)) common++;
   score += common;
   // token overlap in text content (cheap)
-  const aTokens = new Set(tokenize(a.textContent || ""));
-  const bTokens = new Set(tokenize(b.textContent || ""));
+  const aTokens = new Set(tokenize(a.textContent || ''));
+  const bTokens = new Set(tokenize(b.textContent || ''));
   let tcommon = 0;
   for (const t of aTokens) if (bTokens.has(t)) tcommon++;
   score += tcommon * 0.5;
@@ -432,11 +411,7 @@ function elementSimilarity(a: Element, b: Element) {
  * - includes attributes whose values differ
  * NEW FEATURE: respects tracking configuration to filter which attributes count as changes
  */
-function getChangedAttributes(
-  a: Element,
-  b: Element,
-  options: CompareOptions = {}
-): string[] {
+function getChangedAttributes(a: Element, b: Element, options: CompareOptions = {}): string[] {
   const changed: Set<string> = new Set();
   const aMap = new Map<string, string | null>();
   for (let i = 0; i < a.attributes.length; i++) {
@@ -480,7 +455,7 @@ function getChangedAttributes(
         // If tagRule is not an array, it should be treated as boolean (but we expect arrays)
       } else {
         // Tag not in trackedTags record, check for wildcard "*"
-        const wildcardRule = options.trackedTags["*"];
+        const wildcardRule = options.trackedTags['*'];
         if (wildcardRule && Array.isArray(wildcardRule)) {
           return allChanged.filter((attr) => wildcardRule.includes(attr));
         } else if (!wildcardRule) {
@@ -493,9 +468,7 @@ function getChangedAttributes(
 
   // Apply global attribute filter if provided
   if (options.trackedAttributes) {
-    return allChanged.filter((attr) =>
-      options.trackedAttributes!.includes(attr)
-    );
+    return allChanged.filter((attr) => options.trackedAttributes!.includes(attr));
   }
 
   return allChanged;
@@ -505,11 +478,7 @@ function getChangedAttributes(
  * Wrap an element in a wrapper element with a class. If element has no parent,
  * the function is a no-op (element may be detached).
  */
-function wrapElement(
-  el: Element,
-  className: string | undefined,
-  wrapperTag = "span"
-) {
+function wrapElement(el: Element, className: string | undefined, wrapperTag = 'span') {
   const parent = el.parentNode;
   if (!parent) return;
   const wrapper = document.createElement(wrapperTag);
@@ -531,14 +500,10 @@ function wrapElement(
  * NEW FEATURE: now respects tracking configuration to determine what counts as a change
  * and stores changed attributes data for statistics collection
  */
-function detectAndWrapElementChange(
-  oldEl: Element,
-  newEl: Element,
-  options: CompareOptions
-) {
-  const wrapperTag = options.wrapperTag ?? "span";
-  const elemClass = options.elementChangeClass ?? "diff-elem-changed";
-  const attrClass = options.attributeChangeClass ?? "diff-attr-changed";
+function detectAndWrapElementChange(oldEl: Element, newEl: Element, options: CompareOptions) {
+  const wrapperTag = options.wrapperTag ?? 'span';
+  const elemClass = options.elementChangeClass ?? 'diff-elem-changed';
+  const attrClass = options.attributeChangeClass ?? 'diff-attr-changed';
 
   const tagChanged = oldEl.tagName !== newEl.tagName;
 
@@ -549,7 +514,7 @@ function detectAndWrapElementChange(
   const cb = options.onElementChange;
 
   if (tagChanged) {
-    const changeType: "tag" = "tag";
+    const changeType: 'tag' = 'tag';
     let cbResult: Element | null | void = undefined;
     if (cb) cbResult = cb(oldEl, newEl, changeType);
     if (cbResult instanceof Element) {
@@ -570,11 +535,11 @@ function detectAndWrapElementChange(
       // user chose to skip wrapping
     } else {
       // fallback to default wrapping
-      wrapElement(oldEl, elemClass + " diff-tag-changed", wrapperTag);
-      wrapElement(newEl, elemClass + " diff-tag-changed", wrapperTag);
+      wrapElement(oldEl, elemClass + ' diff-tag-changed', wrapperTag);
+      wrapElement(newEl, elemClass + ' diff-tag-changed', wrapperTag);
     }
   } else if (attrChanged) {
-    const changeType: "attribute" = "attribute";
+    const changeType: 'attribute' = 'attribute';
     let cbResult: Element | null | void = undefined;
     if (cb) cbResult = cb(oldEl, newEl, changeType, changedAttrs);
     if (cbResult instanceof Element) {
@@ -601,10 +566,10 @@ function detectAndWrapElementChange(
       // Store the changed attributes in a data attribute for later collection
       if (changedAttrs.length > 0) {
         const tagName = oldEl.tagName.toLowerCase();
-        oldEl.setAttribute("data-diff-changed-attrs", changedAttrs.join(","));
-        oldEl.setAttribute("data-diff-tag-name", tagName);
-        newEl.setAttribute("data-diff-changed-attrs", changedAttrs.join(","));
-        newEl.setAttribute("data-diff-tag-name", tagName);
+        oldEl.setAttribute('data-diff-changed-attrs', changedAttrs.join(','));
+        oldEl.setAttribute('data-diff-tag-name', tagName);
+        newEl.setAttribute('data-diff-changed-attrs', changedAttrs.join(','));
+        newEl.setAttribute('data-diff-tag-name', tagName);
       }
     }
   }
@@ -620,10 +585,7 @@ function detectAndWrapElementChange(
  * It looks for wrapped elements and spans to count different types of changes.
  * NEW FEATURE: Now also collects per-tag statistics
  */
-export function collectDiffStats(
-  rootElements: Element[],
-  options: CompareOptions = {}
-): DiffStats {
+export function collectDiffStats(rootElements: Element[], options: CompareOptions = {}): DiffStats {
   const stats: DiffStats = {
     totalChangedTags: 0,
     totalAddedTexts: 0,
@@ -636,32 +598,26 @@ export function collectDiffStats(
     changedTags: {},
   };
 
-  const addedClass = options.addedClass ?? "diff-added";
-  const removedClass = options.removedClass ?? "diff-removed";
-  const elementChangeClass = options.elementChangeClass ?? "diff-elem-changed";
-  const attributeChangeClass =
-    options.attributeChangeClass ?? "diff-attr-changed";
+  const addedClass = options.addedClass ?? 'diff-added';
+  const removedClass = options.removedClass ?? 'diff-removed';
+  const elementChangeClass = options.elementChangeClass ?? 'diff-elem-changed';
+  const attributeChangeClass = options.attributeChangeClass ?? 'diff-attr-changed';
 
   // Helper function to recursively traverse and count
   function traverseAndCount(element: Element) {
     // Check if this element represents a change
-    const classes = element.className.split(" ");
+    const classes = element.className.split(' ');
 
     // Count element-level changes (tag or attribute changes)
-    if (
-      classes.includes(elementChangeClass) ||
-      classes.includes(attributeChangeClass)
-    ) {
+    if (classes.includes(elementChangeClass) || classes.includes(attributeChangeClass)) {
       stats.totalChangedTags++;
 
       // NEW FEATURE: Collect per-tag change statistics
-      const tagName =
-        element.getAttribute("data-diff-tag-name") ||
-        element.tagName.toLowerCase();
-      const changedAttrsStr = element.getAttribute("data-diff-changed-attrs");
+      const tagName = element.getAttribute('data-diff-tag-name') || element.tagName.toLowerCase();
+      const changedAttrsStr = element.getAttribute('data-diff-changed-attrs');
 
       if (changedAttrsStr) {
-        const changedAttrs = changedAttrsStr.split(",").filter(Boolean);
+        const changedAttrs = changedAttrsStr.split(',').filter(Boolean);
 
         if (!stats.changedTags![tagName]) {
           stats.changedTags![tagName] = { count: 0, changedAttributes: [] };
@@ -687,19 +643,17 @@ export function collectDiffStats(
     }
 
     // NEW FEATURE: Count added tags per tag type
-    const addedTagName = element.getAttribute("data-diff-added-tag");
+    const addedTagName = element.getAttribute('data-diff-added-tag');
     if (addedTagName) {
       stats.totalAddedTags++;
-      stats.addedTags![addedTagName] =
-        (stats.addedTags![addedTagName] || 0) + 1;
+      stats.addedTags![addedTagName] = (stats.addedTags![addedTagName] || 0) + 1;
     }
 
     // NEW FEATURE: Count removed tags per tag type
-    const removedTagName = element.getAttribute("data-diff-removed-tag");
+    const removedTagName = element.getAttribute('data-diff-removed-tag');
     if (removedTagName) {
       stats.totalRemovedTags++;
-      stats.removedTags![removedTagName] =
-        (stats.removedTags![removedTagName] || 0) + 1;
+      stats.removedTags![removedTagName] = (stats.removedTags![removedTagName] || 0) + 1;
     }
 
     // Count added/removed tags (look for elements that are entirely wrapped as added/removed)
@@ -744,8 +698,8 @@ export function getCustomDiffStats(
   const newTree = stringToFlatTree(newHTML);
 
   // Create containers for the diff operation
-  const oldContainer = document.createElement("div");
-  const newContainer = document.createElement("div");
+  const oldContainer = document.createElement('div');
+  const newContainer = document.createElement('div');
 
   // Append parsed elements to containers
   oldTree.rootElements.forEach((el) => oldContainer.appendChild(el));
@@ -759,8 +713,8 @@ export function getCustomDiffStats(
   );
 
   // Collect all elements for the result
-  const allOldElements = Array.from(oldContainer.querySelectorAll("*"));
-  const allNewElements = Array.from(newContainer.querySelectorAll("*"));
+  const allOldElements = Array.from(oldContainer.querySelectorAll('*'));
+  const allNewElements = Array.from(newContainer.querySelectorAll('*'));
   const diffResult = {
     rootElements: [
       ...Array.from(oldContainer.children),
@@ -781,30 +735,28 @@ export function getCustomDiffStats(
 export function formatTagStatsSummary(stats: DiffStats): string {
   const lines: string[] = [];
 
-  lines.push("=== PER-TAG DIFF STATISTICS ===");
+  lines.push('=== PER-TAG DIFF STATISTICS ===');
 
   if (stats.addedTags && Object.keys(stats.addedTags).length > 0) {
-    lines.push("\n🟢 Added Tags:");
+    lines.push('\n🟢 Added Tags:');
     Object.entries(stats.addedTags).forEach(([tag, count]) => {
       lines.push(`  - <${tag}>: ${count} element(s)`);
     });
   }
 
   if (stats.removedTags && Object.keys(stats.removedTags).length > 0) {
-    lines.push("\n🔴 Removed Tags:");
+    lines.push('\n🔴 Removed Tags:');
     Object.entries(stats.removedTags).forEach(([tag, count]) => {
       lines.push(`  - <${tag}>: ${count} element(s)`);
     });
   }
 
   if (stats.changedTags && Object.keys(stats.changedTags).length > 0) {
-    lines.push("\n🟡 Changed Tags:");
+    lines.push('\n🟡 Changed Tags:');
     Object.entries(stats.changedTags).forEach(([tag, data]) => {
       lines.push(`  - <${tag}>: ${data.count} element(s)`);
       if (data.changedAttributes.length > 0) {
-        lines.push(
-          `    Changed attributes: ${data.changedAttributes.join(", ")}`
-        );
+        lines.push(`    Changed attributes: ${data.changedAttributes.join(', ')}`);
       }
     });
   }
@@ -812,11 +764,9 @@ export function formatTagStatsSummary(stats: DiffStats): string {
   lines.push(
     `\n📊 Totals: ${stats.totalAddedTags} added, ${stats.totalRemovedTags} removed, ${stats.totalChangedTags} changed`
   );
-  lines.push(
-    `📝 Text changes: ${stats.totalAddedTexts} added, ${stats.totalRemovedTexts} removed`
-  );
+  lines.push(`📝 Text changes: ${stats.totalAddedTexts} added, ${stats.totalRemovedTexts} removed`);
 
-  return lines.join("\n");
+  return lines.join('\n');
 }
 
 /* -------------------------
@@ -826,9 +776,7 @@ export function formatTagStatsSummary(stats: DiffStats): string {
 function computeLCS(a: string[], b: string[]): Array<[number, number]> {
   const n = a.length;
   const m = b.length;
-  const dp: number[][] = Array.from({ length: n + 1 }, () =>
-    Array(m + 1).fill(0)
-  );
+  const dp: number[][] = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i--) {
     for (let j = m - 1; j >= 0; j--) {
       if (a[i] === b[j]) dp[i][j] = 1 + dp[i + 1][j + 1];
@@ -873,9 +821,7 @@ export function computeWordDiff(oldText: string, newText: string): Token[] {
   const b = tokenize(newText);
   const na = a.length;
   const nb = b.length;
-  const dp: number[][] = Array.from({ length: na + 1 }, () =>
-    Array(nb + 1).fill(0)
-  );
+  const dp: number[][] = Array.from({ length: na + 1 }, () => Array(nb + 1).fill(0));
   for (let i = na - 1; i >= 0; i--) {
     for (let j = nb - 1; j >= 0; j--) {
       if (a[i] === b[j]) dp[i][j] = 1 + dp[i + 1][j + 1];
@@ -887,19 +833,19 @@ export function computeWordDiff(oldText: string, newText: string): Token[] {
     j = 0;
   while (i < na && j < nb) {
     if (a[i] === b[j]) {
-      tokens.push({ type: "equal", text: a[i] });
+      tokens.push({ type: 'equal', text: a[i] });
       i++;
       j++;
     } else if (dp[i + 1][j] >= dp[i][j + 1]) {
-      tokens.push({ type: "removed", text: a[i] });
+      tokens.push({ type: 'removed', text: a[i] });
       i++;
     } else {
-      tokens.push({ type: "added", text: b[j] });
+      tokens.push({ type: 'added', text: b[j] });
       j++;
     }
   }
-  while (i < na) tokens.push({ type: "removed", text: a[i++] });
-  while (j < nb) tokens.push({ type: "added", text: b[j++] });
+  while (i < na) tokens.push({ type: 'removed', text: a[i++] });
+  while (j < nb) tokens.push({ type: 'added', text: b[j++] });
 
   // merge consecutive tokens of same type and join with spaces where appropriate
   const merged: Token[] = [];
@@ -907,7 +853,7 @@ export function computeWordDiff(oldText: string, newText: string): Token[] {
     if (!t.text) continue;
     const last = merged[merged.length - 1];
     if (last && last.type === t.type) {
-      last.text = last.text + " " + t.text;
+      last.text = last.text + ' ' + t.text;
     } else {
       merged.push({ ...t });
     }
