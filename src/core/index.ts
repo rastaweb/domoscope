@@ -32,9 +32,12 @@ export class DiffEngine {
     const oldPool = new Set(oldElements);
     const matchedOld = new Set<Element>();
 
-    const watchedSet = this.options.watchedTags
-      ? new Set(this.options.watchedTags.map((tag: string) => tag.toLowerCase()))
+    const watchedTags = this.options.watchedTags
+      ? this.options.watchedTags.map((tag: string) => tag.toLowerCase())
       : null;
+
+    const watchAll = watchedTags ? watchedTags.includes('*') : false;
+    const watchedSet = watchedTags ? new Set(watchedTags.filter((t) => t !== '*')) : null;
 
     // Pair elements by similarity
     for (const newElement of newElements) {
@@ -71,23 +74,29 @@ export class DiffEngine {
         this.compareNode(bestMatch, newElement);
       } else {
         // New element with no suitable match
-        this.handleAddedElement(newElement, watchedSet);
+        this.handleAddedElement(newElement, watchedSet, watchAll);
       }
     }
 
     // Handle remaining old elements (removed)
     for (const oldElement of oldPool) {
-      this.handleRemovedElement(oldElement, watchedSet);
+      this.handleRemovedElement(oldElement, watchedSet, watchAll);
     }
   }
 
   /**
    * Handle an element that was added (no match in old tree)
    */
-  private handleAddedElement(element: Element, watchedSet: Set<string> | null): void {
+  private handleAddedElement(
+    element: Element,
+    watchedSet: Set<string> | null,
+    watchAll = false
+  ): void {
     const tagLower = element.tagName.toLowerCase();
 
-    if (watchedSet && watchedSet.has(tagLower)) {
+    const shouldWatch = watchAll || (watchedSet && watchedSet.has(tagLower));
+
+    if (shouldWatch) {
       const wrapperTag = this.options.wrapperTag ?? 'span';
       const elementClass = this.options.elementChangeClass ?? 'diff-elem-changed';
       const changeHandler = this.options.onElementChange;
@@ -120,10 +129,15 @@ export class DiffEngine {
   /**
    * Handle an element that was removed (no match in new tree)
    */
-  private handleRemovedElement(element: Element, watchedSet: Set<string> | null): void {
+  private handleRemovedElement(
+    element: Element,
+    watchedSet: Set<string> | null,
+    watchAll = false
+  ): void {
     const tagLower = element.tagName.toLowerCase();
+    const shouldWatch = watchAll || (watchedSet && watchedSet.has(tagLower));
 
-    if (watchedSet && watchedSet.has(tagLower)) {
+    if (shouldWatch) {
       const wrapperTag = this.options.wrapperTag ?? 'span';
       const removedClass = this.options.removedClass ?? 'diff-removed';
       const changeHandler = this.options.onElementChange;
