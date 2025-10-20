@@ -319,15 +319,16 @@ export class StatsCollector {
           stats.totalChangedTags++;
 
           // Collect per-tag change statistics
+          if (!stats.changedTags![tagName]) {
+            stats.changedTags![tagName] = { count: 0, changedAttributes: [] };
+          }
+
+          const tagStats = stats.changedTags![tagName]!;
+          tagStats.count++;
+
+          // If we have specific attribute information, use it
           if (changedAttrsStr) {
             const changedAttrs = changedAttrsStr.split(',').filter(Boolean);
-
-            if (!stats.changedTags![tagName]) {
-              stats.changedTags![tagName] = { count: 0, changedAttributes: [] };
-            }
-
-            const tagStats = stats.changedTags![tagName]!;
-            tagStats.count++;
 
             // Merge unique changed attributes
             for (const attr of changedAttrs) {
@@ -335,6 +336,10 @@ export class StatsCollector {
                 tagStats.changedAttributes.push(attr);
               }
             }
+          } else if (classes.includes(attributeChangeClass)) {
+            // For attribute changes without specific data, try to detect from the element
+            // This is a fallback when data attributes aren't set properly
+            tagStats.changedAttributes.push('attributes');
           }
         }
       }

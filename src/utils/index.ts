@@ -3,20 +3,13 @@
  * Focused on preserving DOM structure while adding annotations
  */
 
-import type {
-  CompareOptions,
-  MarkingMode,
-  TokenTarget,
-  Token,
-} from "../types/index.js";
+import type { CompareOptions, MarkingMode, TokenTarget, Token } from '../types/index.js';
 
 /**
  * Check if a node is relevant for diff processing
  */
 export function isRelevantNode(node: Node): boolean {
-  return (
-    node.nodeType === Node.TEXT_NODE || node.nodeType === Node.ELEMENT_NODE
-  );
+  return node.nodeType === Node.TEXT_NODE || node.nodeType === Node.ELEMENT_NODE;
 }
 
 /**
@@ -24,7 +17,7 @@ export function isRelevantNode(node: Node): boolean {
  */
 export function nodeKey(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
-    return "T";
+    return 'T';
   }
   return `E:${(node as Element).tagName}`;
 }
@@ -36,7 +29,7 @@ export function nodeKey(node: Node): string {
 export function wrapElement(
   element: Element,
   className: string | undefined,
-  wrapperTag = "span"
+  wrapperTag = 'span'
 ): void {
   const parent = element.parentNode;
   if (!parent) return; // Element is detached
@@ -59,15 +52,15 @@ export function replaceTextNodeWithWrapped(
   options: CompareOptions
 ): void {
   const className =
-    mode === "added"
-      ? options.addedClass ?? "diff-added"
-      : options.removedClass ?? "diff-removed";
+    mode === 'added'
+      ? (options.addedClass ?? 'diff-added')
+      : (options.removedClass ?? 'diff-removed');
 
   const fragment = document.createDocumentFragment();
-  const span = document.createElement("span");
+  const span = document.createElement('span');
 
   span.className = className;
-  span.textContent = ` ${textNode.textContent ?? ""} `;
+  span.textContent = ` ${textNode.textContent ?? ''} `;
   fragment.appendChild(span);
 
   textNode.parentNode?.replaceChild(fragment, textNode);
@@ -111,21 +104,21 @@ export function fragmentFromTokens(
   options: CompareOptions
 ): DocumentFragment {
   const fragment = document.createDocumentFragment();
-  const addedClass = options.addedClass ?? "diff-added";
-  const removedClass = options.removedClass ?? "diff-removed";
+  const addedClass = options.addedClass ?? 'diff-added';
+  const removedClass = options.removedClass ?? 'diff-removed';
 
   let isFirst = true;
 
   for (const token of tokens) {
-    if (token.type === "equal") {
+    if (token.type === 'equal') {
       appendTextNode(fragment, token.text, isFirst);
-    } else if (token.type === "added" && target === "new") {
-      const span = document.createElement("span");
+    } else if (token.type === 'added' && target === 'new') {
+      const span = document.createElement('span');
       span.className = addedClass;
       span.textContent = ` ${token.text} `;
       fragment.appendChild(span);
-    } else if (token.type === "removed" && target === "old") {
-      const span = document.createElement("span");
+    } else if (token.type === 'removed' && target === 'old') {
+      const span = document.createElement('span');
       span.className = removedClass;
       span.textContent = ` ${token.text} `;
       fragment.appendChild(span);
@@ -135,7 +128,7 @@ export function fragmentFromTokens(
 
   // Ensure fragment has at least an empty text node for consistent structure
   if (!fragment.firstChild) {
-    fragment.appendChild(document.createTextNode(""));
+    fragment.appendChild(document.createTextNode(''));
   }
 
   return fragment;
@@ -144,11 +137,7 @@ export function fragmentFromTokens(
 /**
  * Append a text node to a fragment with proper spacing
  */
-export function appendTextNode(
-  fragment: DocumentFragment,
-  text: string,
-  _isFirst: boolean
-): void {
+export function appendTextNode(fragment: DocumentFragment, text: string, _isFirst: boolean): void {
   fragment.appendChild(document.createTextNode(text));
 }
 
@@ -192,11 +181,7 @@ export function getChangedAttributes(
   const allChanged = Array.from(changed);
 
   // Apply tracking filters
-  return applyTrackingFilters(
-    allChanged,
-    elementA.tagName.toLowerCase(),
-    options
-  );
+  return applyTrackingFilters(allChanged, elementA.tagName.toLowerCase(), options);
 }
 
 /**
@@ -211,9 +196,7 @@ function applyTrackingFilters(
   if (options.trackedTags) {
     if (Array.isArray(options.trackedTags)) {
       // Array form: if tag is not in the list, no attributes count as changed
-      if (
-        !options.trackedTags.map((tag) => tag.toLowerCase()).includes(tagName)
-      ) {
+      if (!options.trackedTags.map((tag) => tag.toLowerCase()).includes(tagName)) {
         return [];
       }
     } else {
@@ -226,11 +209,9 @@ function applyTrackingFilters(
         }
       } else {
         // Tag not in trackedTags record, check for wildcard "*"
-        const wildcardRule = options.trackedTags["*"];
+        const wildcardRule = options.trackedTags['*'];
         if (wildcardRule && Array.isArray(wildcardRule)) {
-          return changedAttributes.filter((attr) =>
-            wildcardRule.includes(attr)
-          );
+          return changedAttributes.filter((attr) => wildcardRule.includes(attr));
         } else if (!wildcardRule) {
           // No rule for this tag and no wildcard, don't track changes
           return [];
@@ -241,9 +222,7 @@ function applyTrackingFilters(
 
   // Apply global attribute filter if provided
   if (options.trackedAttributes) {
-    return changedAttributes.filter((attr) =>
-      options.trackedAttributes!.includes(attr)
-    );
+    return changedAttributes.filter((attr) => options.trackedAttributes!.includes(attr));
   }
 
   return changedAttributes;
@@ -258,9 +237,9 @@ export function detectAndWrapElementChange(
   newElement: Element,
   options: CompareOptions
 ): void {
-  const wrapperTag = options.wrapperTag ?? "span";
-  const elementClass = options.elementChangeClass ?? "diff-elem-changed";
-  const attributeClass = options.attributeChangeClass ?? "diff-attr-changed";
+  const wrapperTag = options.wrapperTag ?? 'span';
+  const elementClass = options.elementChangeClass ?? 'diff-elem-changed';
+  const attributeClass = options.attributeChangeClass ?? 'diff-attr-changed';
 
   const tagChanged = oldElement.tagName !== newElement.tagName;
   const changedAttrs = getChangedAttributes(oldElement, newElement, options);
@@ -269,20 +248,25 @@ export function detectAndWrapElementChange(
   const changeHandler = options.onElementChange;
 
   if (tagChanged) {
-    const changeType = "tag" as const;
+    const changeType = 'tag' as const;
     let handlerResult: Element | null | void = undefined;
 
     if (changeHandler) {
       handlerResult = changeHandler(oldElement, newElement, changeType);
     }
 
+    // Always store tag change data for statistics collection
+    const oldTagName = oldElement.tagName.toLowerCase();
+    const newTagName = newElement.tagName.toLowerCase();
+    oldElement.setAttribute('data-diff-tag-name', oldTagName);
+    newElement.setAttribute('data-diff-tag-name', newTagName);
+    oldElement.setAttribute('data-diff-changed-attrs', 'tagName');
+    newElement.setAttribute('data-diff-changed-attrs', 'tagName');
+
     if (handlerResult instanceof Element) {
       // Use custom wrapper element
       wrapWithCustomElement(oldElement, handlerResult);
-      wrapWithCustomElement(
-        newElement,
-        handlerResult.cloneNode(true) as Element
-      );
+      wrapWithCustomElement(newElement, handlerResult.cloneNode(true) as Element);
     } else if (handlerResult === null) {
       // User opted out of wrapping
     } else {
@@ -291,46 +275,32 @@ export function detectAndWrapElementChange(
       wrapElement(newElement, `${elementClass} diff-tag-changed`, wrapperTag);
     }
   } else if (attributesChanged) {
-    const changeType = "attribute" as const;
+    const changeType = 'attribute' as const;
     let handlerResult: Element | null | void = undefined;
 
     if (changeHandler) {
-      handlerResult = changeHandler(
-        oldElement,
-        newElement,
-        changeType,
-        changedAttrs
-      );
+      handlerResult = changeHandler(oldElement, newElement, changeType, changedAttrs);
+    }
+
+    // Always store changed attributes data for statistics collection (regardless of wrapping)
+    if (changedAttrs.length > 0) {
+      const tagName = oldElement.tagName.toLowerCase();
+      oldElement.setAttribute('data-diff-changed-attrs', changedAttrs.join(','));
+      oldElement.setAttribute('data-diff-tag-name', tagName);
+      newElement.setAttribute('data-diff-changed-attrs', changedAttrs.join(','));
+      newElement.setAttribute('data-diff-tag-name', tagName);
     }
 
     if (handlerResult instanceof Element) {
       // Use custom wrapper element
       wrapWithCustomElement(oldElement, handlerResult);
-      wrapWithCustomElement(
-        newElement,
-        handlerResult.cloneNode(true) as Element
-      );
+      wrapWithCustomElement(newElement, handlerResult.cloneNode(true) as Element);
     } else if (handlerResult === null) {
       // User opted out of wrapping
     } else {
       // Default wrapping for attribute changes
       wrapElement(oldElement, attributeClass, wrapperTag);
       wrapElement(newElement, attributeClass, wrapperTag);
-
-      // Store changed attributes data for statistics collection
-      if (changedAttrs.length > 0) {
-        const tagName = oldElement.tagName.toLowerCase();
-        oldElement.setAttribute(
-          "data-diff-changed-attrs",
-          changedAttrs.join(",")
-        );
-        oldElement.setAttribute("data-diff-tag-name", tagName);
-        newElement.setAttribute(
-          "data-diff-changed-attrs",
-          changedAttrs.join(",")
-        );
-        newElement.setAttribute("data-diff-tag-name", tagName);
-      }
     }
   }
 }
@@ -353,7 +323,7 @@ export function stringToFlatTree(html: string): {
   rootElements: Element[];
   allElements: Element[];
 } {
-  const container = document.createElement("div");
+  const container = document.createElement('div');
   container.innerHTML = html.trim();
 
   const allElements: Element[] = [];
@@ -378,23 +348,23 @@ export function validateHTML(html: string): {
 } {
   const errors: string[] = [];
 
-  if (typeof html !== "string") {
-    errors.push("HTML must be a string");
+  if (typeof html !== 'string') {
+    errors.push('HTML must be a string');
     return { isValid: false, errors };
   }
 
   if (html.trim().length === 0) {
-    errors.push("HTML cannot be empty");
+    errors.push('HTML cannot be empty');
     return { isValid: false, errors };
   }
 
   try {
-    const container = document.createElement("div");
+    const container = document.createElement('div');
     container.innerHTML = html;
 
     // Basic validation - check if parsing succeeded
-    if (container.children.length === 0 && html.trim().indexOf("<") !== -1) {
-      errors.push("HTML parsing failed - no valid elements found");
+    if (container.children.length === 0 && html.trim().indexOf('<') !== -1) {
+      errors.push('HTML parsing failed - no valid elements found');
     }
   } catch (error) {
     errors.push(`HTML parsing error: ${error}`);

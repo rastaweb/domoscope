@@ -189,12 +189,31 @@ export function formatTagStatsSummary(stats: DiffStats): string {
   return formatStatsSummary(stats);
 }
 
+/**
+ * Get a simple list of which tags were changed and what attributes changed
+ *
+ * @param stats - Statistics object from getCustomDiffStats
+ * @returns Array of objects with tag name and changed attributes
+ */
+export function getChangedTagsList(stats: DiffStats): Array<{
+  tagName: string;
+  count: number;
+  changedAttributes: string[];
+}> {
+  return Object.entries(stats.changedTags || {}).map(([tagName, data]) => ({
+    tagName,
+    count: data.count,
+    changedAttributes: data.changedAttributes,
+  }));
+}
+
 // Default export for convenience
 export default {
   compareElements,
   collectDiffStats,
   getCustomDiffStats,
   formatTagStatsSummary,
+  getChangedTagsList,
   stringToFlatTree,
 
   // Configuration
