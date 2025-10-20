@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fix Verification Test</title>
+  </head>
+  <body>
+    <h1>🔧 Domoscope Fix Verification</h1>
+    <div id="results"></div>
+
+    <script type="module">
+      import * as domoscope from './dist/index.js';
+
+      console.log('🧪 Testing attribute change counting fix...');
+
+      // Test Case 1: Simple attribute removal (your original case)
+      const test1Old = '<h1 class="h1-style">عنوان تستی رپورتاژ من</h1>';
+      const test1New = '<h1>عنوان تستی رپورتاژ من</h1>';
+
+      const result1 = domoscope.getCustomDiffStats(test1Old, test1New);
+      console.log('Test 1 - Attribute removal:');
+      console.log('  Expected: 1 changed tag');
+      console.log('  Actual:', result1.stats.totalChangedTags);
+      console.log('  Result:', result1.stats.totalChangedTags === 1 ? '✅ PASS' : '❌ FAIL');
+
+      // Test Case 2: Multiple attribute changes
+      const test2Old = '<div class="old" id="test" data-value="1">Content</div>';
+      const test2New = '<div class="new" id="test" data-value="2">Content</div>';
+
+      const result2 = domoscope.getCustomDiffStats(test2Old, test2New);
+      console.log('\nTest 2 - Multiple attribute changes:');
+      console.log('  Expected: 1 changed tag');
+      console.log('  Actual:', result2.stats.totalChangedTags);
+      console.log('  Result:', result2.stats.totalChangedTags === 1 ? '✅ PASS' : '❌ FAIL');
+
+      // Test Case 3: Two separate elements with changes
+      const test3Old = '<div><h1 class="old">Title</h1><p class="old">Para</p></div>';
+      const test3New = '<div><h1 class="new">Title</h1><p class="new">Para</p></div>';
+
+      const result3 = domoscope.getCustomDiffStats(test3Old, test3New);
+      console.log('\nTest 3 - Two elements changed:');
+      console.log('  Expected: 2 changed tags');
+      console.log('  Actual:', result3.stats.totalChangedTags);
+      console.log('  Result:', result3.stats.totalChangedTags === 2 ? '✅ PASS' : '❌ FAIL');
+
+      // Test Case 4: No changes
+      const test4Old = '<h1>Same content</h1>';
+      const test4New = '<h1>Same content</h1>';
+
+      const result4 = domoscope.getCustomDiffStats(test4Old, test4New);
+      console.log('\nTest 4 - No changes:');
+      console.log('  Expected: 0 changed tags');
+      console.log('  Actual:', result4.stats.totalChangedTags);
+      console.log('  Result:', result4.stats.totalChangedTags === 0 ? '✅ PASS' : '❌ FAIL');
+
+      // Display results in HTML
+      const allPassed =
+        result1.stats.totalChangedTags === 1 &&
+        result2.stats.totalChangedTags === 1 &&
+        result3.stats.totalChangedTags === 2 &&
+        result4.stats.totalChangedTags === 0;
+
+      document.getElementById('results').innerHTML = `
+            <h2>Fix Verification Results</h2>
+            <div style="padding: 20px; background: ${allPassed ? '#e6ffe6' : '#ffe6e6'}; border-radius: 8px; margin: 20px 0;">
+                <h3>${allPassed ? '✅ ALL TESTS PASSED!' : '❌ Some tests failed'}</h3>
+                <ul>
+                    <li><strong>Test 1 (Attribute removal):</strong> ${result1.stats.totalChangedTags === 1 ? '✅' : '❌'} Expected 1, got ${result1.stats.totalChangedTags}</li>
+                    <li><strong>Test 2 (Multiple attributes):</strong> ${result2.stats.totalChangedTags === 1 ? '✅' : '❌'} Expected 1, got ${result2.stats.totalChangedTags}</li>
+                    <li><strong>Test 3 (Two elements):</strong> ${result3.stats.totalChangedTags === 2 ? '✅' : '❌'} Expected 2, got ${result3.stats.totalChangedTags}</li>
+                    <li><strong>Test 4 (No changes):</strong> ${result4.stats.totalChangedTags === 0 ? '✅' : '❌'} Expected 0, got ${result4.stats.totalChangedTags}</li>
+                </ul>
+            </div>
+            
+            <h3>Your Original Test Case</h3>
+            <p><strong>Persian text with class removal:</strong></p>
+            <p>Expected: <code>totalChangedTags: 1</code></p>
+            <p>Actual: <code>totalChangedTags: ${result1.stats.totalChangedTags}</code></p>
+            <p>Status: <strong style="color: ${result1.stats.totalChangedTags === 1 ? 'green' : 'red'}">${result1.stats.totalChangedTags === 1 ? 'FIXED! ✅' : 'Still broken ❌'}</strong></p>
+        `;
+    </script>
+  </body>
+</html>

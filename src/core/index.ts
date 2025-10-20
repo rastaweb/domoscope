@@ -299,32 +299,41 @@ export class StatsCollector {
     const elementChangeClass = this.options.elementChangeClass ?? 'diff-elem-changed';
     const attributeChangeClass = this.options.attributeChangeClass ?? 'diff-attr-changed';
 
+    // Track counted changes to prevent double counting
+    const countedChanges = new Set<string>();
+
     // Traverse and count changes
     const traverseAndCount = (element: Element): void => {
       const classes = element.className.split(' ');
 
       // Count element-level changes
       if (classes.includes(elementChangeClass) || classes.includes(attributeChangeClass)) {
-        stats.totalChangedTags++;
-
-        // Collect per-tag change statistics
+        // Create unique identifier for this change
         const tagName = element.getAttribute('data-diff-tag-name') || element.tagName.toLowerCase();
-        const changedAttrsStr = element.getAttribute('data-diff-changed-attrs');
+        const changedAttrsStr = element.getAttribute('data-diff-changed-attrs') || '';
+        const changeId = `${tagName}:${changedAttrsStr}:${element.textContent?.substring(0, 50) || ''}`;
 
-        if (changedAttrsStr) {
-          const changedAttrs = changedAttrsStr.split(',').filter(Boolean);
+        // Only count if we haven't seen this change before
+        if (!countedChanges.has(changeId)) {
+          countedChanges.add(changeId);
+          stats.totalChangedTags++;
 
-          if (!stats.changedTags![tagName]) {
-            stats.changedTags![tagName] = { count: 0, changedAttributes: [] };
-          }
+          // Collect per-tag change statistics
+          if (changedAttrsStr) {
+            const changedAttrs = changedAttrsStr.split(',').filter(Boolean);
 
-          const tagStats = stats.changedTags![tagName]!;
-          tagStats.count++;
+            if (!stats.changedTags![tagName]) {
+              stats.changedTags![tagName] = { count: 0, changedAttributes: [] };
+            }
 
-          // Merge unique changed attributes
-          for (const attr of changedAttrs) {
-            if (!tagStats.changedAttributes.includes(attr)) {
-              tagStats.changedAttributes.push(attr);
+            const tagStats = stats.changedTags![tagName]!;
+            tagStats.count++;
+
+            // Merge unique changed attributes
+            for (const attr of changedAttrs) {
+              if (!tagStats.changedAttributes.includes(attr)) {
+                tagStats.changedAttributes.push(attr);
+              }
             }
           }
         }

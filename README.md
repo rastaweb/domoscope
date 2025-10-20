@@ -93,6 +93,8 @@ graph TB
 - **🚀 Browser & Node.js**: Universal compatibility with ES modules and CommonJS support
 - **🎮 Interactive Playground**: Built-in HTML playground for testing and experimentation
 - **📈 Algorithm Transparency**: Detailed flow documentation with visual algorithm diagrams
+- **🎯 Precise Change Counting**: Accurate statistics that count element changes once (not per DOM tree)
+- **🌐 International Text Support**: Enhanced Persian, Arabic, Chinese, and complex script handling
 
 ## 🔬 Algorithm Flow Diagram
 

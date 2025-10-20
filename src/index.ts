@@ -31,7 +31,7 @@ export type {
   SimilarityScore,
   ParsedTree,
   PerformanceMetrics,
-} from "./types/index.js";
+} from './types/index.js';
 
 // Export configuration management
 export type { ConfigProvider } from './config/index.js';
@@ -40,7 +40,7 @@ export {
   DefaultConfigProvider,
   ConfigBuilder,
   ConfigPresets,
-  validateConfig
+  validateConfig,
 } from './config/index.js';
 
 // Export algorithm functions
@@ -54,7 +54,7 @@ export {
   getPerformanceMetrics,
   resetPerformanceMetrics,
   configureCaching,
-} from "./algorithms/index.js";
+} from './algorithms/index.js';
 
 // Export utility functions
 export {
@@ -67,27 +67,15 @@ export {
   detectAndWrapElementChange,
   stringToFlatTree,
   validateHTML,
-} from "./utils/index.js";
+} from './utils/index.js';
 
 // Export core engine
-export {
-  DiffEngine,
-  StatsCollector,
-  formatStatsSummary,
-} from "./core/index.js";
+export { DiffEngine, StatsCollector, formatStatsSummary } from './core/index.js';
 
 // Core API Functions
-import {
-  DiffEngine,
-  StatsCollector,
-  formatStatsSummary,
-} from "./core/index.js";
-import { stringToFlatTree } from "./utils/index.js";
-import {
-  DefaultConfigProvider,
-  ConfigBuilder,
-  ConfigPresets,
-} from "./config/index.js";
+import { DiffEngine, StatsCollector, formatStatsSummary } from './core/index.js';
+import { stringToFlatTree } from './utils/index.js';
+import { DefaultConfigProvider, ConfigBuilder, ConfigPresets } from './config/index.js';
 import {
   computeLCS,
   elementSimilarity,
@@ -97,12 +85,8 @@ import {
   getCacheStats,
   getPerformanceMetrics,
   resetPerformanceMetrics,
-} from "./algorithms/index.js";
-import type {
-  ExtendedCompareOptions,
-  DiffResultWithStats,
-  DiffStats,
-} from "./types/index.js";
+} from './algorithms/index.js';
+import type { ExtendedCompareOptions, DiffResultWithStats, DiffStats } from './types/index.js';
 
 /**
  * Compare two lists of DOM elements with intelligent pairing and recursive diffing
@@ -159,12 +143,16 @@ export function getCustomDiffStats(
   const newTree = stringToFlatTree(newHTML);
 
   // Create containers for the diff operation
-  const oldContainer = document.createElement("div");
-  const newContainer = document.createElement("div");
+  const oldContainer = document.createElement('div');
+  const newContainer = document.createElement('div');
 
-  // Append parsed elements to containers
+  // Append parsed elements to containers and mark trees
   oldTree.rootElements.forEach((el) => oldContainer.appendChild(el));
   newTree.rootElements.forEach((el) => newContainer.appendChild(el));
+
+  // Mark trees to distinguish old from new for statistics
+  oldContainer.setAttribute('data-diff-old-tree', 'true');
+  newContainer.setAttribute('data-diff-new-tree', 'true');
 
   // Run the diff operation
   compareElements(
@@ -174,8 +162,8 @@ export function getCustomDiffStats(
   );
 
   // Collect all elements for the result
-  const allOldElements = Array.from(oldContainer.querySelectorAll("*"));
-  const allNewElements = Array.from(newContainer.querySelectorAll("*"));
+  const allOldElements = Array.from(oldContainer.querySelectorAll('*'));
+  const allNewElements = Array.from(newContainer.querySelectorAll('*'));
 
   const diffResult = {
     rootElements: [

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug Persian Text Issue</title>
+  </head>
+  <body>
+    <h1>🔍 Domoscope Persian Text Debug</h1>
+
+    <div id="results"></div>
+
+    <script type="module">
+      import * as domoscope from './dist/index.js';
+
+      // Make it available globally for debugging
+      window.domoscope = domoscope;
+
+      const oldHtml = `
+    <h1 class="h1-style">عنوان تستی رپورتاژ من</h1>
+    <div>
+        <p>
+            <p>لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و با استفاده از طراحان گرافیک است. چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که لازم است و برای شرایط فعلی تکنولوژی مورد نیاز و کاربردهای متنوع با هدف بهبود <a href="http://google.com">ابزارهای کاربردی</a> می باشد. کتابهای زیادی در شصت و سه درصد گذشته، حال و آینده شناخت فراوان جامعه و متخصصان را می طلبد تا با نرم افزارها شناخت بیشتری را برای طراحان رایانه ای علی الخصوص طراحان خلاقی و فرهنگ پیشرو در زبان فارسی ایجاد کرد. در این صورت می توان امید داشت که تمام و دشواری موجود در ارائه راهکارها و <a href="http://google.com">شرایط سخت تایپ</a> به پایان رسد و زمان مورد نیاز شامل حروفچینی دستاوردهای اصلی و جوابگوی سوالات پیوسته اهل دنیای موجود طراحی اساسا مورد استفاده قرار گیرد.</p>
+            <p><img src="http://stage.api.mamiacollection.com/ftp/2025/10/13/3UvA8nJ72q0P3noLhYdtRNo7o5bG3yv7NyYR5a68.jpg" alt=""></p>
+            <p class="has-text-align-right">روزی یک مرد ثروتمند، پسر بچه کوچکش را بـه ده برد تا بـه او نشان دهد مردمی که در آنجا زندگی می کنند، چقدر فقیر هستند.</p>
+            <p class="has-text-align-right">ان دو یک شبانه روز در <a href="http://google.com" title="گوگل" rel="nofollow">خانه محقر</a> یک روستایی مهمان بودند. در راه بازگشت و در پایان سفر، مرد از پسرش پرسید: نظرت در مورد مسافرتمان چه بود؟پسر پاسخ داد:</p>
+            <p class="has-text-align-right">عالی بود پدر! پدر پرسید آیا بـه زندگی ان ها توجه کردی؟پسر پاسخ داد: بله پدر! و پدر پرسید: چه چیزی از این سفر یاد گرفتی؟پسر کمی اندیشید و بعد بـه آرامی گفت: فهمیدم که ما در خانه یک سگ داریم و آن ها چهار تا. ما در حیاطمان یک فواره داریم و آنها رودخانه ای دارند که نهایت ندارد.</p>
+            <p class="has-text-align-right">ما در حیاطمان فانوس های‌ تزیینی داریم و ان ها ستارگان را دارند.</p>
+            <p class="has-text-align-right"><a href="http://test.com" title="عنوان تستی"><img src="http://stage.api.mamiacollection.com/ftp/2025/10/13/mYeeGB8jej8BayBQFmJuI8I6zBt0MsbnvT599jUb.jpg" alt="متن آلت تصویر" width="768" height="432"></a></p>
+            <p class="has-text-align-right">حیاط ما بـه دیوارهایش محدود می‌شود اما باغ آن ها بی انتهاست! با شنیدن حرفهای پسر، زبان مرد بند آمده بود. بعد پسر بچه اضافه کرد : متشکرم پدر، تو بـه من نشان دادی که ما چقدر فقیر هستیم.</p>
+        </p>
+    </div>
+    <h3>man nistam</h3>
+`;
+
+      const newHtml = `
+    <h1>عنوان تستی رپورتاژ من</h1>
+    <div>
+        <p>
+            <p>لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و با استفاده از طراحان گرافیک است. چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که لازم است و برای شرایط فعلی تکنولوژی مورد نیاز و کاربردهای متنوع با هدف بهبود <a href="http://google.com">ابزارهای کاربردی</a> می باشد. کتابهای زیادی در شصت و سه درصد گذشته، حال و آینده شناخت فراوان جامعه و متخصصان را می طلبد تا با نرم افزارها شناخت بیشتری را برای طراحان رایانه ای علی الخصوص طراحان خلاقی و فرهنگ پیشرو در زبان فارسی ایجاد کرد. در این صورت می توان امید داشت که تمام و دشواری موجود در ارائه راهکارها و <a href="http://google.com">شرایط سخت تایپ</a> به پایان رسد و زمان مورد نیاز شامل حروفچینی دستاوردهای اصلی و جوابگوی سوالات پیوسته اهل دنیای موجود طراحی اساسا مورد استفاده قرار گیرد.</p>
+            <p><img src="http://stage.api.mamiacollection.com/ftp/2025/10/13/3UvA8nJ72q0P3noLhYdtRNo7o5bG3yv7NyYR5a68.jpg" alt=""></p>
+            <p class="has-text-align-right">روزی یک مرد ثروتمند، پسر بچه کوچکش را بـه ده برد تا بـه او نشان دهد مردمی که در آنجا زندگی می کنند، چقدر فقیر هستند.</p>
+            <p class="has-text-align-right">ان دو یک شبانه روز در <a href="http://google.com" title="گوگل" rel="nofollow">خانه محقر</a> یک روستایی مهمان بودند. در راه بازگشت و در پایان سفر، مرد از پسرش پرسید: نظرت در مورد مسافرتمان چه بود؟پسر پاسخ داد:</p>
+            <p class="has-text-align-right">عالی بود پدر! پدر پرسید آیا بـه زندگی ان ها توجه کردی؟پسر پاسخ داد: بله پدر! و پدر پرسید: چه چیزی از این سفر یاد گرفتی؟پسر کمی اندیشید و بعد بـه آرامی گفت: فهمیدم که ما در خانه یک سگ داریم و آن ها چهار تا. ما در حیاطمان یک فواره داریم و آنها رودخانه ای دارند که نهایت ندارد.</p>
+            <p class="has-text-align-right">ما در حیاطمان فانوس های‌ تزیینی داریم و ان ها ستارگان را دارند.</p>
+            <p class="has-text-align-right"><a href="http://test.com" title="عنوان تستی"><img src="http://stage.api.mamiacollection.com/ftp/2025/10/13/mYeeGB8jej8BayBQFmJuI8I6zBt0MsbnvT599jUb.jpg" alt="متن آلت تصویر" width="768" height="432"></a></p>
+            <p class="has-text-align-right">حیاط ما بـه دیوارهایش محدود می‌شود اما باغ آن ها بی انتهاست! با شنیدن حرفهای پسر، زبان مرد بند آمده بود. بعد پسر بچه اضافه کرد : متشکرم پدر، تو بـه من نشان دادی که ما چقدر فقیر هستیم.</p>
+        </p>
+    </div>
+    <h3>man nistam</h3>
+`;
+
+      console.log('🔍 Starting debug analysis...');
+      console.log('Only difference should be: <h1 class="h1-style"> → <h1>');
+
+      try {
+        const result = domoscope.getCustomDiffStats(oldHtml, newHtml);
+
+        console.log('📊 Results:');
+        console.log('Total Changed Tags:', result.stats.totalChangedTags, '(Expected: 1)');
+        console.log('Full Stats:', result.stats);
+
+        // Detailed analysis
+        console.log('\n🔬 Detailed Analysis:');
+        console.log('Tag Stats:', result.stats.tagStats);
+        console.log('Changed Tags:', result.stats.changedTags);
+
+        // Check the diff result elements
+        console.log('\n🏗️ Diff Result Structure:');
+        console.log('Root Elements Count:', result.diffResult.rootElements.length);
+
+        result.diffResult.rootElements.forEach((el, i) => {
+          console.log(`Element ${i}:`, el.tagName, el.className, el.getAttribute('class'));
+
+          // Check for diff annotations
+          const diffElements = el.querySelectorAll('[class*="diff-"]');
+          console.log(`  Diff annotations found: ${diffElements.length}`);
+          diffElements.forEach((diffEl, j) => {
+            console.log(`    ${j}: ${diffEl.tagName}.${diffEl.className}`);
+          });
+        });
+
+        // Display in page
+        document.getElementById('results').innerHTML = `
+                <h2>Results Analysis</h2>
+                <p><strong>Total Changed Tags:</strong> ${result.stats.totalChangedTags} (Expected: 1)</p>
+                <p><strong>Issue:</strong> ${result.stats.totalChangedTags === 1 ? '✅ CORRECT' : '❌ INCORRECT - Should be 1'}</p>
+                
+                <h3>Full Statistics:</h3>
+                <pre>${JSON.stringify(result.stats, null, 2)}</pre>
+                
+                <h3>Expected Change:</h3>
+                <p>Only the <code>&lt;h1&gt;</code> tag should be marked as changed (class attribute removed)</p>
+            `;
+      } catch (error) {
+        console.error('❌ Error during analysis:', error);
+        document.getElementById('results').innerHTML =
+          `<p style="color: red;">Error: ${error.message}</p>`;
+      }
+    </script>
+  </body>
+</html>

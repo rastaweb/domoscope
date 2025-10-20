@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug Double Counting Issue</title>
+  </head>
+  <body>
+    <h1>🔍 Debug Double Counting</h1>
+    <div id="results"></div>
+
+    <script type="module">
+      import * as domoscope from './dist/index.js';
+
+      // Your exact test case
+      const oldHtml = `
+    <h1 class="h1-style">عنوان تستی رپورتاژ من</h1>
+    <div>
+        <p>Content</p>
+    </div>
+`;
+
+      const newHtml = `
+    <h1 class="h1-style">عنوان تستی رپورتاژ من</h1>
+    <div class="content-wrapper">
+        <p>Content</p>
+    </div>
+`;
+
+      console.log('🔍 Analyzing your test case...');
+      console.log('Expected changes: 1 (div gets class="content-wrapper")');
+
+      const result = domoscope.getCustomDiffStats(oldHtml, newHtml);
+
+      console.log('📊 Results:');
+      console.log('Total Changed Tags:', result.stats.totalChangedTags);
+      console.log('Changed Tags Detail:', result.stats.changedTags);
+      console.log('Full Stats:', result.stats);
+
+      // Let's examine the actual DOM structure that was created
+      console.log('\n🏗️ Examining DOM Structure:');
+      console.log('Root Elements Count:', result.diffResult.rootElements.length);
+
+      result.diffResult.rootElements.forEach((el, i) => {
+        console.log(`\n=== Root Element ${i} ===`);
+        console.log('Tag:', el.tagName);
+        console.log('Classes:', el.className);
+        console.log(
+          'Tree marker:',
+          el.getAttribute('data-diff-old-tree') || el.getAttribute('data-diff-new-tree') || 'none'
+        );
+
+        // Find all elements with diff classes
+        const diffElements = el.querySelectorAll('[class*="diff-"]');
+        console.log(`Found ${diffElements.length} diff-annotated elements:`);
+
+        diffElements.forEach((diffEl, j) => {
+          console.log(`  ${j}: ${diffEl.tagName}.${diffEl.className}`);
+          console.log(
+            `     Tree context:`,
+            diffEl
+              .closest('[data-diff-old-tree], [data-diff-new-tree]')
+              ?.getAttribute('data-diff-old-tree')
+              ? 'OLD'
+              : 'NEW'
+          );
+          console.log(
+            `     Attributes:`,
+            Array.from(diffEl.attributes)
+              .map((a) => `${a.name}="${a.value}"`)
+              .join(', ')
+          );
+        });
+      });
+
+      // Display results
+      document.getElementById('results').innerHTML = `
+            <h2>Analysis Results</h2>
+            <div style="background: ${result.stats.totalChangedTags === 1 ? '#e6ffe6' : '#ffe6e6'}; padding: 20px; border-radius: 8px;">
+                <h3>${result.stats.totalChangedTags === 1 ? '✅ CORRECT' : '❌ INCORRECT'}</h3>
+                <p><strong>Expected:</strong> 1 changed tag (div gets class)</p>
+                <p><strong>Actual:</strong> ${result.stats.totalChangedTags} changed tags</p>
+                <p><strong>Issue:</strong> ${result.stats.totalChangedTags === 1 ? 'None - working correctly!' : 'Still double counting'}</p>
+            </div>
+            
+            <h3>Detailed Analysis</h3>
+            <pre>Root Elements: ${result.diffResult.rootElements.length}
+Changed Tags Detail: ${JSON.stringify(result.stats.changedTags, null, 2)}
+All Stats: ${JSON.stringify(result.stats, null, 2)}</pre>
+        `;
+    </script>
+  </body>
+</html>
