@@ -555,7 +555,7 @@ interface StyleConfig {
 
 ```typescript
 interface TrackingConfig {
-  watchedTags?: string[]; // Tags for special handling
+  watchedTags?: string[]; // Tags for special handling. Use ['*'] to watch all tags
   trackedTags?: string[] | Record<string, string[]>; // Tags to track
   trackedAttributes?: string[]; // Attributes to track
 }
@@ -908,6 +908,8 @@ flowchart TD
 
 2. **Special Handling for Watched Tags**:
    - Elements in `watchedTags` get wrapped when added/removed
+   - Use `'*'` wildcard to watch all HTML tags: `watchedTags: ['*']`
+   - Combines with specific tags: `watchedTags: ['*']` watches everything
    - Triggers `onElementChange` callback for custom handling
 
 3. **Recursive Processing**:
@@ -923,7 +925,9 @@ const newTree = stringToFlatTree('<div><p>New text</p></div>');
 compareElements(oldTree.rootElements, newTree.rootElements, {
   addedClass: 'highlight-added',
   removedClass: 'highlight-removed',
-  watchedTags: ['img', 'a'],
+  watchedTags: ['img', 'a'], // Watch specific tags
+  // watchedTags: ['*'],          // Watch ALL tags (wildcard)
+  // watchedTags: ['*', 'div'],   // Watch all tags (redundant example)
   onElementChange: (oldEl, newEl, changeType) => {
     console.log(`${changeType} detected`);
     return null; // use default wrapping
@@ -999,7 +1003,7 @@ flowchart LR
     B --> E[compareElements]
     D --> E
     E --> F[collectDiffStats]
-    F --> G[{diffResult, stats}]
+    F --> G["diffResult + stats"]
 ```
 
 **Return Value**:
@@ -1076,12 +1080,12 @@ console.log(`Added ${stats.addedTags?.img || 0} images`);
 
 ```mermaid
 flowchart TD
-    A[Old Children: T, E:div, T, E:p] --> B[Build Keys]
-    C[New Children: T, E:div, E:span, T] --> B
-    B --> D[LCS Algorithm]
-    D --> E[Matches: (0,0), (1,1), (2,3)]
-    E --> F[Process Matched Pairs]
-    E --> G[Mark Unmatched as Added/Removed]
+    A["Old Children: T, E:div, T, E:p"] --> B["Build Keys"]
+    C["New Children: T, E:div, E:span, T"] --> B
+    B --> D["LCS Algorithm"]
+    D --> E["Matches: 0-0, 1-1, 2-3"]
+    E --> F["Process Matched Pairs"]
+    E --> G["Mark Unmatched as Added/Removed"]
 ```
 
 ### computeLCS(a: string[], b: string[])
@@ -1635,7 +1639,35 @@ class CMSDiffViewer {
 }
 ```
 
-#### 2. Automated Testing Integration
+#### 2. Watch All Tags with Wildcard (\*)
+
+```typescript
+import { getCustomDiffStats } from 'domoscope';
+
+// Watch ALL HTML tags for changes
+const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML, {
+  watchedTags: ['*'], // Wildcard: watch every tag type
+  elementChangeClass: 'any-element-changed',
+  attributeChangeClass: 'any-attr-changed',
+});
+
+// Now ALL tag changes will be wrapped and counted
+console.log('All tag changes:', stats.changedTags);
+// Example output: { h1: {count: 1, changedAttributes: ['class']},
+//                  div: {count: 2, changedAttributes: ['id', 'style']},
+//                  p: {count: 1, changedAttributes: ['class']} }
+
+// Compare with specific tag watching:
+const specificResult = getCustomDiffStats(oldHTML, newHTML, {
+  watchedTags: ['h1', 'div'], // Only h1 and div changes are wrapped
+});
+
+// vs default behavior (no wrapping):
+const defaultResult = getCustomDiffStats(oldHTML, newHTML);
+// Only text-level changes are marked, no element wrapping
+```
+
+#### 3. Automated Testing Integration
 
 ```typescript
 // Jest/Vitest integration
