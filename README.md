@@ -1310,6 +1310,39 @@ const options: CompareOptions = {
 - **Algorithm State**: O(n\*m) for LCS dynamic programming tables
 - **Statistics**: O(k) where k is number of unique tag types
 
+## 🎯 Statistics Accuracy
+
+Domoscope provides **precise change counting** that avoids common pitfalls in DOM diff libraries:
+
+### ✅ **Accurate Change Counting**
+
+- **Single Count Per Change**: Each element change is counted exactly once, not per DOM tree
+- **Deduplication Logic**: Uses content-based signatures to prevent double counting
+- **Attribute Precision**: Multiple attribute changes on same element count as one change
+- **International Text Support**: Handles Persian, Arabic, Chinese, and complex scripts correctly
+
+### 📊 **Statistics Collection Examples**
+
+```typescript
+// Example: Single attribute change
+const oldHtml = '<div>Content</div>';
+const newHtml = '<div class="added">Content</div>';
+const result = getCustomDiffStats(oldHtml, newHtml);
+console.log(result.stats.totalChangedTags); // ✅ Returns: 1 (not 2)
+
+// Example: Multiple attributes on same element
+const oldHtml = '<div class="old" data-value="1">Content</div>';
+const newHtml = '<div class="new" data-value="2" id="added">Content</div>';
+const result = getCustomDiffStats(oldHtml, newHtml);
+console.log(result.stats.totalChangedTags); // ✅ Returns: 1 (logical change)
+
+// Example: Persian/RTL text with changes
+const oldHtml = '<h1 class="old-class">عنوان فارسی</h1>';
+const newHtml = '<h1 class="new-class">عنوان فارسی</h1>';
+const result = getCustomDiffStats(oldHtml, newHtml);
+console.log(result.stats.totalChangedTags); // ✅ Returns: 1 (accurate)
+```
+
 ## 🚀 Performance & Optimization
 
 ### Algorithm Complexity Analysis
