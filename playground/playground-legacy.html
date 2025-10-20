@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Domoscope Playground (Legacy Browser Support)</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .playground {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .editor-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .editor-section h3 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #007acc;
+        padding-bottom: 10px;
+      }
+
+      textarea {
+        width: 100%;
+        height: 200px;
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+
+      .controls {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      button {
+        background: #007acc;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background: #005a99;
+      }
+
+      button.secondary {
+        background: #6c757d;
+      }
+
+      button.secondary:hover {
+        background: #545b62;
+      }
+
+      .results {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .results h3 {
+        margin-top: 0;
+        color: #333;
+      }
+
+      .stats {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+
+      .diff-result {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        max-height: 400px;
+        overflow: auto;
+        padding: 15px;
+        font-family: monospace;
+        font-size: 12px;
+      }
+
+      .performance {
+        background: #e7f3ff;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+        font-size: 12px;
+      }
+
+      .error {
+        background: #ffe6e6;
+        color: #cc0000;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .presets {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+      }
+
+      .preset-btn {
+        background: #28a745;
+        font-size: 12px;
+        padding: 5px 10px;
+      }
+
+      .preset-btn:hover {
+        background: #1e7e34;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>🔍 Domoscope Playground</h1>
+      <p>Advanced HTML diff engine for TypeScript/JavaScript</p>
+      <p>
+        <em
+          >Legacy browser compatible version - Enter HTML in the editors below and click "Run
+          Diff"</em
+        >
+      </p>
+    </div>
+
+    <div class="controls">
+      <h3>🎮 Controls</h3>
+      <div class="presets">
+        <button class="preset-btn" onclick="loadPreset('simple')">Simple Text</button>
+        <button class="preset-btn" onclick="loadPreset('attributes')">Attributes</button>
+        <button class="preset-btn" onclick="loadPreset('complex')">Complex Structure</button>
+      </div>
+      <div class="button-group">
+        <button onclick="runDiff()">🚀 Run Diff</button>
+        <button class="secondary" onclick="clearAll()">🗑️ Clear All</button>
+        <button class="secondary" onclick="swapContent()">🔄 Swap Content</button>
+      </div>
+    </div>
+
+    <div class="playground">
+      <div class="editor-section">
+        <h3>📝 Original HTML</h3>
+        <textarea id="originalHTML" placeholder="Enter your original HTML here..."></textarea>
+      </div>
+      <div class="editor-section">
+        <h3>📝 Modified HTML</h3>
+        <textarea id="modifiedHTML" placeholder="Enter your modified HTML here..."></textarea>
+      </div>
+    </div>
+
+    <div class="results">
+      <h3>📊 Results</h3>
+      <div id="error" class="error" style="display: none"></div>
+      <div id="stats" class="stats"></div>
+      <div id="performance" class="performance"></div>
+      <h4>Diff Visualization</h4>
+      <div id="diffResult" class="diff-result"></div>
+    </div>
+
+    <!-- Load using browser bundle approach -->
+    <script type="module" src="browser-bundle.js"></script>
+
+    <script>
+      // Presets for quick testing
+      const presets = {
+        simple: {
+          original: '<div>Hello World</div>',
+          modified: '<div>Hello Universe</div>',
+        },
+        attributes: {
+          original: '<div class="old-class" id="test">Content</div>',
+          modified: '<div class="new-class" id="test" data-new="value">Content</div>',
+        },
+        complex: {
+          original: `<div class="container">
+    <h1>Original Title</h1>
+    <p>This is the original paragraph.</p>
+    <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+    </ul>
+</div>`,
+          modified: `<div class="container">
+    <h1>Modified Title</h1>
+    <p>This is the modified paragraph with additional content.</p>
+    <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+        <li>Item 3</li>
+    </ul>
+    <footer>New footer added</footer>
+</div>`,
+        },
+      };
+
+      function loadPreset(name) {
+        const preset = presets[name];
+        if (preset) {
+          document.getElementById('originalHTML').value = preset.original;
+          document.getElementById('modifiedHTML').value = preset.modified;
+        }
+      }
+
+      function clearAll() {
+        document.getElementById('originalHTML').value = '';
+        document.getElementById('modifiedHTML').value = '';
+        document.getElementById('stats').textContent = '';
+        document.getElementById('diffResult').innerHTML = '';
+        document.getElementById('performance').textContent = '';
+        hideError();
+      }
+
+      function swapContent() {
+        const original = document.getElementById('originalHTML').value;
+        const modified = document.getElementById('modifiedHTML').value;
+        document.getElementById('originalHTML').value = modified;
+        document.getElementById('modifiedHTML').value = original;
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+      }
+
+      function hideError() {
+        document.getElementById('error').style.display = 'none';
+      }
+
+      function runDiff() {
+        // Wait a bit for the module to load if not ready yet
+        if (typeof window.domoscope === 'undefined') {
+          setTimeout(runDiff, 100);
+          return;
+        }
+
+        try {
+          hideError();
+
+          const originalHTML = document.getElementById('originalHTML').value.trim();
+          const modifiedHTML = document.getElementById('modifiedHTML').value.trim();
+
+          if (!originalHTML || !modifiedHTML) {
+            showError('Please enter both original and modified HTML content.');
+            return;
+          }
+
+          const startTime = performance.now();
+
+          // Use the Domoscope library
+          const result = window.domoscope.getCustomDiffStats(originalHTML, modifiedHTML);
+
+          const endTime = performance.now();
+          const duration = (endTime - startTime).toFixed(2);
+
+          // Display statistics
+          const statsText = window.domoscope.formatTagStatsSummary(result.stats);
+          document.getElementById('stats').textContent = statsText;
+
+          // Display performance info
+          document.getElementById('performance').innerHTML = `
+                    <strong>⚡ Performance:</strong> Diff completed in ${duration}ms
+                    <br><strong>📈 Elements processed:</strong> ${result.stats.totalElements || 'N/A'}
+                `;
+
+          // Create visualization
+          createDiffVisualization(result.diffResult);
+        } catch (error) {
+          console.error('Error running diff:', error);
+          showError(`Error: ${error.message}`);
+        }
+      }
+
+      function createDiffVisualization(diffResult) {
+        const diffContainer = document.getElementById('diffResult');
+
+        if (!diffResult || !diffResult.rootElements) {
+          diffContainer.innerHTML = '<p>No diff results to display.</p>';
+          return;
+        }
+
+        // Create a simple HTML representation of the diff
+        let html = '';
+
+        try {
+          // Try to render the root elements
+          if (diffResult.rootElements.length > 0) {
+            diffResult.rootElements.forEach((element, index) => {
+              html += `<div style="margin-bottom: 10px; border-left: 3px solid #007acc; padding-left: 10px;">`;
+              html += `<strong>Element ${index + 1}:</strong><br>`;
+              html += escapeHtml(element.outerHTML || element.toString());
+              html += '</div>';
+            });
+          } else {
+            html += '<p>No root elements found in diff result.</p>';
+          }
+
+          diffContainer.innerHTML = html;
+        } catch (error) {
+          console.error('Error creating visualization:', error);
+          diffContainer.innerHTML = `<p>Error creating visualization: ${error.message}</p>`;
+        }
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Load a default preset on page load
+      window.addEventListener('load', function () {
+        loadPreset('simple');
+      });
+    </script>
+  </body>
+</html>

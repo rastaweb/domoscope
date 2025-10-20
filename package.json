@@ -120,32 +120,6 @@
       "limit": "50 KB"
     }
   ],
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "jest-environment-jsdom",
-    "roots": [
-      "<rootDir>/src",
-      "<rootDir>/tests"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.ts",
-      "**/?(*.)+(spec|test).ts"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.ts",
-      "!src/**/*.d.ts",
-      "!src/types/**/*"
-    ],
-    "coverageDirectory": "coverage",
-    "coverageReporters": [
-      "text",
-      "lcov",
-      "html"
-    ],
-    "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1"
-    }
-  },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
     "plugins": [
