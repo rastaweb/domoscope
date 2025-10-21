@@ -6,10 +6,33 @@
 import type { CompareOptions, MarkingMode, TokenTarget, Token } from '../types/index.js';
 
 /**
- * Check if a node is relevant for diff processing
+ * Check if a node is relevant for comparison (text or element)
  */
 export function isRelevantNode(node: Node): boolean {
   return node.nodeType === Node.TEXT_NODE || node.nodeType === Node.ELEMENT_NODE;
+}
+
+/**
+ * Get the appropriate wrapper tag for a specific change type
+ */
+export function getWrapperTag(
+  changeType: 'added' | 'removed' | 'changed' | 'text',
+  options: CompareOptions
+): string {
+  const defaultTag = options.wrapperTag ?? 'span';
+
+  switch (changeType) {
+    case 'added':
+      return options.addedWrapperTag ?? defaultTag;
+    case 'removed':
+      return options.removedWrapperTag ?? defaultTag;
+    case 'changed':
+      return options.changedWrapperTag ?? defaultTag;
+    case 'text':
+      return options.textWrapperTag ?? defaultTag;
+    default:
+      return defaultTag;
+  }
 }
 
 /**
@@ -24,9 +47,9 @@ export function nodeKey(node: Node): string {
   const element = node as Element;
   const tagName = element.tagName;
 
-  // For structural elements like table, thead, tbody, tr - use only tag name
+  // For structural elements like table, thead, tbody, tr, td, th - use only tag name
   // to allow content changes within them
-  const structuralTags = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'UL', 'OL', 'DIV'];
+  const structuralTags = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TD', 'TH', 'UL', 'OL', 'DIV'];
   if (structuralTags.includes(tagName)) {
     return `E:${tagName}`;
   }
@@ -106,12 +129,13 @@ export function replaceTextNodeWithWrapped(
       ? (options.addedClass ?? 'diff-added')
       : (options.removedClass ?? 'diff-removed');
 
+  const wrapperTag = getWrapperTag(mode, options);
   const fragment = document.createDocumentFragment();
-  const span = document.createElement('span');
+  const wrapper = document.createElement(wrapperTag);
 
-  span.className = className;
-  span.textContent = ` ${textNode.textContent ?? ''} `;
-  fragment.appendChild(span);
+  wrapper.className = className;
+  wrapper.textContent = ` ${textNode.textContent ?? ''} `;
+  fragment.appendChild(wrapper);
 
   textNode.parentNode?.replaceChild(fragment, textNode);
 }
@@ -163,15 +187,17 @@ export function fragmentFromTokens(
     if (token.type === 'equal') {
       appendTextNode(fragment, token.text, isFirst);
     } else if (token.type === 'added' && target === 'new') {
-      const span = document.createElement('span');
-      span.className = addedClass;
-      span.textContent = ` ${token.text} `;
-      fragment.appendChild(span);
+      const wrapperTag = getWrapperTag('added', options);
+      const wrapper = document.createElement(wrapperTag);
+      wrapper.className = addedClass;
+      wrapper.textContent = ` ${token.text} `;
+      fragment.appendChild(wrapper);
     } else if (token.type === 'removed' && target === 'old') {
-      const span = document.createElement('span');
-      span.className = removedClass;
-      span.textContent = ` ${token.text} `;
-      fragment.appendChild(span);
+      const wrapperTag = getWrapperTag('removed', options);
+      const wrapper = document.createElement(wrapperTag);
+      wrapper.className = removedClass;
+      wrapper.textContent = ` ${token.text} `;
+      fragment.appendChild(wrapper);
     }
     isFirst = false;
   }
@@ -287,7 +313,7 @@ export function detectAndWrapElementChange(
   newElement: Element,
   options: CompareOptions
 ): void {
-  const wrapperTag = options.wrapperTag ?? 'span';
+  const wrapperTag = getWrapperTag('changed', options);
   const elementClass = options.elementChangeClass ?? 'diff-elem-changed';
   const attributeClass = options.attributeChangeClass ?? 'diff-attr-changed';
 

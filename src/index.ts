@@ -65,6 +65,7 @@ export {
   fragmentFromTokens,
   getChangedAttributes,
   detectAndWrapElementChange,
+  getWrapperTag,
   stringToFlatTree,
   validateHTML,
 } from './utils/index.js';

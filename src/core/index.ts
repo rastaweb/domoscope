@@ -13,6 +13,7 @@ import {
   fragmentFromTokens,
   detectAndWrapElementChange,
   replaceTextNodeWithWrapped,
+  getWrapperTag,
 } from '../utils/index.js';
 
 /**
@@ -119,7 +120,7 @@ export class DiffEngine {
     element.setAttribute('data-diff-added-tag', element.tagName.toLowerCase());
 
     if (shouldWatch) {
-      const wrapperTag = this.options.wrapperTag ?? 'span';
+      const wrapperTag = getWrapperTag('added', this.options);
       const elementClass = this.options.elementChangeClass ?? 'diff-elem-changed';
       const changeHandler = this.options.onElementChange;
 
@@ -161,7 +162,7 @@ export class DiffEngine {
     element.setAttribute('data-diff-removed-tag', element.tagName.toLowerCase());
 
     if (shouldWatch) {
-      const wrapperTag = this.options.wrapperTag ?? 'span';
+      const wrapperTag = getWrapperTag('removed', this.options);
       const removedClass = this.options.removedClass ?? 'diff-removed';
       const changeHandler = this.options.onElementChange;
 
@@ -436,10 +437,9 @@ export class StatsCollector {
     const traverseAndCount = (element: Element): void => {
       const classes = element.className.split(' ');
 
-      // Skip counting elements that are diff markup (spans created by the diff algorithm)
-      const isDiffMarkup =
-        element.tagName.toLowerCase() === 'span' &&
-        (classes.includes(addedClass) || classes.includes(removedClass));
+      // Skip counting elements that are diff markup (elements created by the diff algorithm)
+      // Check if element has diff classes regardless of tag type (since wrapper tags are customizable)
+      const isDiffMarkup = classes.includes(addedClass) || classes.includes(removedClass);
 
       // Count element-level changes
       if (classes.includes(elementChangeClass) || classes.includes(attributeChangeClass)) {

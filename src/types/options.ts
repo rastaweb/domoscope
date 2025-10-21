@@ -53,6 +53,18 @@ export type StyleConfig = {
 
   /** HTML tag to use for wrapper elements (default: "span") */
   wrapperTag?: string;
+
+  /** HTML tag to use for text diff wrapper elements (default: same as wrapperTag) */
+  textWrapperTag?: string;
+
+  /** HTML tag to use for added content wrapper elements (default: same as wrapperTag) */
+  addedWrapperTag?: string;
+
+  /** HTML tag to use for removed content wrapper elements (default: same as wrapperTag) */
+  removedWrapperTag?: string;
+
+  /** HTML tag to use for changed element wrapper elements (default: same as wrapperTag) */
+  changedWrapperTag?: string;
 };
 
 /**
