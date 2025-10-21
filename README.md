@@ -82,19 +82,61 @@ graph TB
 
 ## ✨ Features
 
-- **🔍 Intelligent Element Matching**: Advanced similarity algorithms with configurable thresholds and cross-tag pairing
-- **🎯 DOM Structure Preservation**: Never modifies original elements, only adds diff annotations
-- **⚡ Performance Optimized**: Dynamic programming with memoization, caching, and space optimization
-- **🎨 Flexible Configuration**: Fluent builder API with preset configurations for common scenarios
-- **📊 Comprehensive Statistics**: Detailed change metrics with per-tag breakdown and performance monitoring
-- **🧩 Modular Architecture**: SOLID principles with dependency inversion and clean interfaces
-- **🌍 Unicode & i18n Support**: Enhanced tokenization for international text and complex scripts
-- **🔧 TypeScript First**: Complete type safety with branded types and strict null checking
-- **🚀 Browser & Node.js**: Universal compatibility with ES modules and CommonJS support
-- **🎮 Interactive Playground**: Built-in HTML playground for testing and experimentation
-- **📈 Algorithm Transparency**: Detailed flow documentation with visual algorithm diagrams
-- **🎯 Precise Change Counting**: Accurate statistics that count element changes once (not per DOM tree)
-- **🌐 International Text Support**: Enhanced Persian, Arabic, Chinese, and complex script handling
+### 🔍 Core Comparison Engine
+
+- **Intelligent Element Matching**: Advanced similarity algorithms with configurable thresholds and cross-tag pairing
+- **DOM Structure Preservation**: Never modifies original elements, only adds diff annotations
+- **LCS Algorithm**: Optimized Longest Common Subsequence implementation with dynamic programming
+- **Text-Level Diffing**: Word-by-word and character-level comparison with tokenization
+- **Element Similarity Scoring**: Multi-factor scoring including tag names, attributes, and content
+
+### 🎨 Configuration & Customization
+
+- **Fluent Builder API**: `ConfigBuilder` with method chaining for easy configuration
+- **Configuration Presets**: Pre-built configurations for common scenarios (CMS, forms, navigation, performance)
+- **Flexible Tracking**: Configurable tag and attribute tracking with wildcard support
+- **Custom CSS Classes**: Configurable styling for added, removed, and changed content
+- **Wrapper Element Control**: Customizable HTML wrapper tags for different change types
+- **Element Change Handlers**: Custom callbacks for handling specific element changes
+
+### 📊 Advanced Statistics & Analytics
+
+- **Comprehensive Change Metrics**: Detailed statistics with per-tag breakdown
+- **Performance Monitoring**: Built-in timing and cache performance metrics
+- **Accurate Change Counting**: Precise statistics that count element changes once (not per DOM tree)
+- **Changed Tags Analysis**: Detailed tracking of which tags and attributes changed
+- **Statistics Formatting**: Human-readable summary formatting for debugging and reporting
+
+### ⚡ Performance & Optimization
+
+- **Memoization & Caching**: Advanced caching with configurable TTL and size limits
+- **Dynamic Programming**: Space-optimized algorithms for large content comparison
+- **Cache Management**: Manual cache control with statistics and configuration
+- **Performance Metrics**: Detailed timing breakdown for pairing, LCS, and text diffing
+- **Configurable Thresholds**: Similarity thresholds and text length limits for optimization
+
+### 🧩 Architecture & Engineering
+
+- **Modular Architecture**: SOLID principles with dependency inversion and clean interfaces
+- **TypeScript First**: Complete type safety with branded types and strict null checking
+- **ES Modules**: Modern module system with proper exports and imports
+- **Universal Compatibility**: Browser & Node.js support with ES modules and CommonJS
+- **Extensible Design**: Plugin-friendly architecture for custom extensions
+
+### 🌍 Text & Internationalization
+
+- **Unicode Support**: Enhanced tokenization for international text and complex scripts
+- **Multi-language Text Processing**: Persian, Arabic, Chinese, and complex script handling
+- **Smart Tokenization**: Context-aware text splitting with punctuation and whitespace handling
+- **HTML Validation**: Built-in HTML parsing and validation utilities
+
+### 🔧 Developer Experience
+
+- **Interactive Playground**: Built-in HTML playground for testing and experimentation
+- **Algorithm Transparency**: Detailed flow documentation with visual algorithm diagrams
+- **Comprehensive API**: Multiple levels of API from high-level to low-level utilities
+- **Error Handling**: Robust error handling with detailed error messages
+- **Configuration Validation**: Built-in validation for configuration options
 
 ## 🔬 Algorithm Flow Diagram
 
@@ -268,14 +310,17 @@ console.log(formatTagStatsSummary(stats));
 ### Advanced Configuration
 
 ```typescript
-import { ConfigBuilder, getCustomDiffStats } from 'domoscope';
+import { ConfigBuilder, getCustomDiffStats, getPerformanceMetrics } from 'domoscope';
 
 // Use fluent configuration API
 const config = new ConfigBuilder()
-  .watchTags(['div', 'p', 'span'])
-  .enableAttributeTracking(['class', 'id', 'data-*'])
-  .setSimilarityThreshold(0.7)
-  .enablePerformanceMonitoring()
+  .watchTags('div', 'p', 'span')
+  .trackAttributes('class', 'id', 'data-value')
+  .withPerformance({
+    minSimilarityThreshold: 0.7,
+    enableMemoization: true,
+    maxTextLength: 10000,
+  })
   .build();
 
 const result = getCustomDiffStats(oldHTML, newHTML, config);
@@ -292,17 +337,20 @@ console.log(`Cache efficiency: ${metrics.cacheHits}/${metrics.cacheMisses}`);
 ```typescript
 import { ConfigPresets, getCustomDiffStats } from 'domoscope';
 
-// Content Management System optimized
-const cmsResult = getCustomDiffStats(oldHTML, newHTML, ConfigPresets.CMS);
+// Basic configuration with minimal tracking
+const basicResult = getCustomDiffStats(oldHTML, newHTML, ConfigPresets.basic());
 
-// Documentation comparison
-const docsResult = getCustomDiffStats(oldHTML, newHTML, ConfigPresets.DOCUMENTATION);
+// Content Management System optimized
+const cmsResult = getCustomDiffStats(oldHTML, newHTML, ConfigPresets.cms());
+
+// Form elements comparison
+const formsResult = getCustomDiffStats(oldHTML, newHTML, ConfigPresets.forms());
+
+// Navigation elements comparison
+const navResult = getCustomDiffStats(oldHTML, newHTML, ConfigPresets.navigation());
 
 // Performance-focused (minimal tracking)
-const fastResult = getCustomDiffStats(oldHTML, newHTML, ConfigPresets.PERFORMANCE);
-
-// Development/debugging (maximum detail)
-const debugResult = getCustomDiffStats(oldHTML, newHTML, ConfigPresets.DEBUG);
+const fastResult = getCustomDiffStats(oldHTML, newHTML, ConfigPresets.performance());
 ```
 
 document.body.appendChild(diffResult.rootElements[1]); // New version with highlights
@@ -349,6 +397,31 @@ const customConfig = new ConfigBuilder()
 const result = getCustomDiffStats(oldHTML, newHTML, customConfig);
 ```
 
+### Modular Imports
+
+Domoscope supports modular imports for tree-shaking and reduced bundle size:
+
+```typescript
+// Import only what you need
+import { getCustomDiffStats } from 'domoscope';
+import { ConfigBuilder } from 'domoscope/config';
+import { computeLCS, elementSimilarity } from 'domoscope/algorithms';
+import { stringToFlatTree, validateHTML } from 'domoscope/utils';
+import { DiffEngine, StatsCollector } from 'domoscope/core';
+
+// Or import specific types
+import type { DiffStats, ExtendedCompareOptions } from 'domoscope/types';
+```
+
+**Available Module Paths:**
+
+- `domoscope` - Main entry point with all functionality
+- `domoscope/config` - Configuration builders and presets
+- `domoscope/algorithms` - Core algorithms and performance utilities
+- `domoscope/utils` - DOM manipulation and utility functions
+- `domoscope/core` - Core diff engine and statistics collector
+- `domoscope/types` - TypeScript type definitions
+
 ## 🎛️ API Reference
 
 ### Core Functions
@@ -391,6 +464,171 @@ Analyze diffed DOM elements and extract statistics.
 function collectDiffStats(rootElements: Element[], options?: ExtendedCompareOptions): DiffStats;
 ```
 
+#### `formatTagStatsSummary(stats)`
+
+Create a formatted summary of diff statistics for debugging and reporting.
+
+```typescript
+function formatTagStatsSummary(stats: DiffStats): string;
+```
+
+#### `getChangedTagsList(stats)`
+
+Get a simple list of which tags were changed and what attributes changed.
+
+```typescript
+function getChangedTagsList(stats: DiffStats): Array<{
+  tagName: string;
+  count: number;
+  changedAttributes: string[];
+}>;
+```
+
+### Algorithm Functions
+
+#### `computeLCS(a, b, config?)`
+
+Compute Longest Common Subsequence with memoization.
+
+```typescript
+function computeLCS(a: string[], b: string[], config?: LCSConfig): LCSMatch[];
+```
+
+#### `elementSimilarity(a, b)`
+
+Calculate similarity score between two elements.
+
+```typescript
+function elementSimilarity(a: Element, b: Element): SimilarityScore;
+```
+
+#### `tokenize(text)`
+
+Tokenize text for word-level diffing with enhanced Unicode support.
+
+```typescript
+function tokenize(text: string): Token[];
+```
+
+#### `computeWordDiff(oldText, newText, maxLength?)`
+
+Compute word-level differences between two text strings.
+
+```typescript
+function computeWordDiff(
+  oldText: string,
+  newText: string,
+  maxLength?: number
+): Array<{ type: 'equal' | 'added' | 'removed'; text: string }>;
+```
+
+### Utility Functions
+
+#### `stringToFlatTree(html)`
+
+Parse HTML string into a flat tree structure.
+
+```typescript
+function stringToFlatTree(html: string): ParsedTree;
+```
+
+#### `validateHTML(html)`
+
+Validate HTML string and return parsing information.
+
+```typescript
+function validateHTML(html: string): {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+};
+```
+
+#### `nodeKey(node)`
+
+Generate a unique key for DOM node identification.
+
+```typescript
+function nodeKey(node: Node): string;
+```
+
+#### `wrapElement(element, className, wrapperTag?)`
+
+Wrap an element with a wrapper containing the specified class.
+
+```typescript
+function wrapElement(element: Element, className: string | undefined, wrapperTag?: string): void;
+```
+
+### Performance & Cache Management
+
+#### `clearCaches()`
+
+Clear all internal memoization caches.
+
+```typescript
+function clearCaches(): void;
+```
+
+#### `getCacheStats()`
+
+Get current cache performance statistics.
+
+```typescript
+function getCacheStats(): {
+  lcsCache: { size: number; hits: number; misses: number };
+  similarityCache: { size: number; hits: number; misses: number };
+};
+```
+
+#### `getPerformanceMetrics()`
+
+Get detailed performance metrics from the last operations.
+
+```typescript
+function getPerformanceMetrics(): PerformanceMetrics;
+```
+
+#### `resetPerformanceMetrics()`
+
+Reset performance metrics counters.
+
+```typescript
+function resetPerformanceMetrics(): void;
+```
+
+#### `configureCaching(options)`
+
+Configure cache behavior and limits.
+
+```typescript
+function configureCaching(options: { ttl?: number; maxSize?: number; enabled?: boolean }): void;
+```
+
+### Core Classes
+
+#### `DiffEngine`
+
+Main diff engine for advanced usage.
+
+```typescript
+class DiffEngine {
+  constructor(options: ExtendedCompareOptions);
+  compareElements(oldElements: Element[], newElements: Element[]): void;
+}
+```
+
+#### `StatsCollector`
+
+Statistics collection and analysis.
+
+```typescript
+class StatsCollector {
+  constructor(config: ExtendedCompareOptions);
+  collectStats(rootElements: Element[]): DiffStats;
+}
+```
+
 ### Configuration
 
 #### `ConfigBuilder`
@@ -400,22 +638,68 @@ Fluent interface for building configurations:
 ```typescript
 const config = new ConfigBuilder()
   .withStyles({ addedClass: 'added', removedClass: 'removed' })
+  .withTracking({ trackedTags: ['p', 'div'], trackedAttributes: ['class', 'id'] })
   .trackTags({ img: ['src', 'alt'], a: ['href'] })
   .trackAttributes('class', 'id')
   .watchTags('img', 'video')
-  .withPerformance({ maxTextLength: 10000 })
+  .withPerformance({ maxTextLength: 10000, enableMemoization: true })
+  .withElementChangeHandler((oldEl, newEl, changeType, changedAttrs) => {
+    // Custom element change handling
+  })
   .build();
 ```
+
+**ConfigBuilder Methods:**
+
+- `withStyles(styleConfig)`: Set CSS classes and wrapper tags
+- `withTracking(trackingConfig)`: Configure tag and attribute tracking
+- `withPerformance(performanceConfig)`: Set performance optimization options
+- `withElementChangeHandler(handler)`: Set custom element change handler
+- `trackTags(...tags)`: Configure specific tags to track for changes
+- `trackAttributes(...attributes)`: Set attributes to track globally
+- `watchTags(...tags)`: Configure tags to watch for additions/removals
 
 #### `ConfigPresets`
 
 Pre-built configurations for common use cases:
 
-- `ConfigPresets.basic()`: Minimal configuration
-- `ConfigPresets.cms()`: Content management systems
-- `ConfigPresets.forms()`: Form elements
-- `ConfigPresets.navigation()`: Navigation elements
-- `ConfigPresets.performance()`: High-performance settings
+```typescript
+// Basic configuration with minimal tracking
+const basicConfig = ConfigPresets.basic();
+
+// Content management system optimized
+const cmsConfig = ConfigPresets.cms();
+
+// Form elements optimized
+const formsConfig = ConfigPresets.forms();
+
+// Navigation elements optimized
+const navConfig = ConfigPresets.navigation();
+
+// High-performance optimized
+const perfConfig = ConfigPresets.performance();
+```
+
+**Available Presets:**
+
+- `ConfigPresets.basic()`: Minimal configuration with default settings
+- `ConfigPresets.cms()`: Optimized for content management (p, h1-h6, div, span tracking)
+- `ConfigPresets.forms()`: Optimized for form elements (input, select, textarea, button)
+- `ConfigPresets.navigation()`: Optimized for navigation (a, nav, ul, li elements)
+- `ConfigPresets.performance()`: High-performance with reduced processing
+
+#### `validateConfig(config)`
+
+Validate configuration options and get detailed error information.
+
+```typescript
+function validateConfig(config: ExtendedCompareOptions): {
+  isValid: boolean;
+  errors: string[];
+};
+```
+
+````
 
 ### Advanced Usage
 
@@ -441,7 +725,7 @@ const config = new ConfigBuilder()
     return undefined; // Use default handling
   })
   .build();
-```
+````
 
 #### Performance Monitoring
 
@@ -497,15 +781,34 @@ The `DiffStats` object provides comprehensive change metrics:
 
 ```typescript
 interface DiffStats {
-  totalChangedTags: number; // Elements with changes
-  totalAddedTexts: number; // Added text spans
-  totalRemovedTexts: number; // Removed text spans
-  totalAddedTags: number; // Added elements
-  totalRemovedTags: number; // Removed elements
+  /** Number of elements with tag or attribute changes */
+  totalChangedTags: number;
 
-  // Per-tag breakdowns
+  /** Number of added text spans/nodes */
+  totalAddedTexts: number;
+
+  /** Number of removed text spans/nodes */
+  totalRemovedTexts: number;
+
+  /** Number of newly added elements */
+  totalAddedTags: number;
+
+  /** Number of removed elements */
+  totalRemovedTags: number;
+
+  /** Total number of words added across all text content */
+  totalAddedWords: number;
+
+  /** Total number of words removed across all text content */
+  totalRemovedWords: number;
+
+  /** Per-tag statistics for added elements (e.g., { a: 5, img: 2 }) */
   addedTags?: Record<string, number>;
+
+  /** Per-tag statistics for removed elements (e.g., { a: 2, span: 10 }) */
   removedTags?: Record<string, number>;
+
+  /** Per-tag statistics for changed elements with detailed attribute info */
   changedTags?: Record<
     string,
     {
@@ -513,6 +816,32 @@ interface DiffStats {
       changedAttributes: string[];
     }
   >;
+}
+```
+
+**Usage Example:**
+
+```typescript
+const { stats } = getCustomDiffStats(oldHTML, newHTML);
+
+console.log(`Total changes: ${stats.totalChangedTags}`);
+console.log(`Added elements: ${stats.totalAddedTags}`);
+console.log(`Removed elements: ${stats.totalRemovedTags}`);
+console.log(`Added words: ${stats.totalAddedWords}`);
+console.log(`Removed words: ${stats.totalRemovedWords}`);
+
+// Per-tag breakdown
+if (stats.addedTags) {
+  Object.entries(stats.addedTags).forEach(([tag, count]) => {
+    console.log(`Added ${count} ${tag} elements`);
+  });
+}
+
+if (stats.changedTags) {
+  Object.entries(stats.changedTags).forEach(([tag, data]) => {
+    console.log(`Changed ${data.count} ${tag} elements:`);
+    console.log(`  Attributes: ${data.changedAttributes.join(', ')}`);
+  });
 }
 ```
 
@@ -536,6 +865,107 @@ src/
 - **StatsCollector**: Statistics gathering and analysis
 - **ConfigBuilder**: Fluent configuration interface
 - **Algorithm modules**: LCS, similarity, and word diffing with optimization
+
+## 📝 TypeScript Types
+
+Domoscope exports comprehensive TypeScript types for full type safety:
+
+### Core Types
+
+```typescript
+// Token types for text diffing
+type TokenType = 'equal' | 'added' | 'removed';
+type Token = { type: TokenType; text: string };
+
+// Result types
+interface DiffResult {
+  rootElements: Element[];
+  allElements: Element[];
+}
+
+interface DiffResultWithStats {
+  diffResult: DiffResult;
+  stats: DiffStats;
+}
+```
+
+### Configuration Types
+
+```typescript
+// Style configuration
+interface StyleConfig {
+  addedClass?: string;
+  removedClass?: string;
+  elementChangeClass?: string;
+  attributeChangeClass?: string;
+  wrapperTag?: string;
+  textWrapperTag?: string;
+  addedWrapperTag?: string;
+  removedWrapperTag?: string;
+  changedWrapperTag?: string;
+}
+
+// Tracking configuration
+interface TrackingConfig {
+  watchedTags?: string[];
+  trackedTags?: string[] | Record<string, string[]>;
+  trackedAttributes?: string[];
+}
+
+// Performance configuration
+interface PerformanceConfig {
+  maxTextLength?: number;
+  minSimilarityThreshold?: number;
+  enableMemoization?: boolean;
+  ignoreWhitespaceTexts?: boolean;
+}
+
+// Complete configuration
+interface ExtendedCompareOptions extends StyleConfig, TrackingConfig, PerformanceConfig {
+  onElementChange?: ElementChangeHandler;
+}
+```
+
+### Handler Types
+
+```typescript
+type ElementChangeHandler = (
+  oldEl: Element | null,
+  newEl: Element | null,
+  changeType: 'tag' | 'attribute' | 'tag-added' | 'tag-removed',
+  changedAttrs?: string[]
+) => void | Element | null;
+```
+
+### Algorithm Types
+
+```typescript
+// Internal algorithm types for advanced usage
+interface LCSMatch {
+  oldIndex: number;
+  newIndex: number;
+  length: number;
+}
+
+interface SimilarityScore {
+  score: number;
+  factors: {
+    tagMatch: number;
+    attributeMatch: number;
+    contentMatch: number;
+    structureMatch: number;
+  };
+}
+
+interface PerformanceMetrics {
+  pairingTime: number;
+  lcsTime: number;
+  textDiffTime: number;
+  elementsProcessed: number;
+  cacheHits: number;
+  cacheMisses: number;
+}
+```
 
 ## 🔧 Configuration Options
 
