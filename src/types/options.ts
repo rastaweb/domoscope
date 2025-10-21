@@ -79,7 +79,13 @@ export interface CompareOptions extends StyleConfig, TrackingConfig {
  * Result of a diff operation including both DOM and statistics
  */
 export interface DiffResult {
-  /** All root elements from both old and new trees */
+  /** Root elements from the old content tree */
+  oldRootElements: Element[];
+
+  /** Root elements from the new content tree */
+  newRootElements: Element[];
+
+  /** All root elements from both old and new trees (for backward compatibility) */
   rootElements: Element[];
 
   /** All elements from both old and new trees */

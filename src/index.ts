@@ -171,11 +171,13 @@ export function getCustomDiffStats(
   const allOldElements = Array.from(oldContainer.querySelectorAll('*'));
   const allNewElements = Array.from(newContainer.querySelectorAll('*'));
 
+  const oldRootElements = Array.from(oldContainer.children) as Element[];
+  const newRootElements = Array.from(newContainer.children) as Element[];
+
   const diffResult = {
-    rootElements: [
-      ...Array.from(oldContainer.children),
-      ...Array.from(newContainer.children),
-    ] as Element[],
+    oldRootElements,
+    newRootElements,
+    rootElements: [...oldRootElements, ...newRootElements], // Keep for backward compatibility
     allElements: [...allOldElements, ...allNewElements],
   };
 

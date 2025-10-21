@@ -397,6 +397,321 @@ const customConfig = new ConfigBuilder()
 const result = getCustomDiffStats(oldHTML, newHTML, customConfig);
 ```
 
+## 📝 Comprehensive Examples
+
+### Example 1: Added and Removed Tags
+
+```typescript
+import { getCustomDiffStats, formatTagStatsSummary } from 'domoscope';
+
+const oldHTML = `
+<div class="content">
+  <h1>Article Title</h1>
+  <p>Original paragraph content.</p>
+  <ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+  </ul>
+</div>
+`;
+
+const newHTML = `
+<div class="content">
+  <h1>Article Title</h1>
+  <p>Modified paragraph content with more details.</p>
+  <blockquote>This is a new quote that was added.</blockquote>
+  <ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+    <li>Item 3</li>
+  </ul>
+  <img src="diagram.png" alt="New diagram" />
+</div>
+`;
+
+// Generate diff with comprehensive tracking
+const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML, {
+  addedClass: 'highlight-added',
+  removedClass: 'highlight-removed',
+  watchedTags: ['blockquote', 'img', 'li'], // Watch for these tag additions/removals
+});
+
+// Display results
+document.getElementById('old-version').appendChild(diffResult.rootElements[0]);
+document.getElementById('new-version').appendChild(diffResult.rootElements[1]);
+
+console.log(formatTagStatsSummary(stats));
+// Output shows:
+// - Added 1 blockquote element
+// - Added 1 img element
+// - Added 1 li element
+// - Text changes in 1 p element
+```
+
+### Example 2: Text and Word-Level Changes
+
+```typescript
+import { getCustomDiffStats } from 'domoscope';
+
+const oldHTML = `
+<article>
+  <h2>Product Review</h2>
+  <p>This product is good and works well for basic needs.</p>
+  <p>The price is reasonable at $50.</p>
+</article>
+`;
+
+const newHTML = `
+<article>
+  <h2>Product Review</h2>
+  <p>This product is excellent and works perfectly for advanced needs.</p>
+  <p>The price is very reasonable at $45 with discount.</p>
+</article>
+`;
+
+const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML, {
+  addedClass: 'word-added',
+  removedClass: 'word-removed',
+  wrapperTag: 'mark', // Use <mark> tags for highlighting
+});
+
+// The result will show:
+// - "good" → "excellent" (removed/added words)
+// - "well" → "perfectly" (removed/added words)
+// - "basic" → "advanced" (removed/added words)
+// - "$50" → "$45 with discount" (removed/added words)
+
+console.log(`Changed words: +${stats.totalAddedWords} -${stats.totalRemovedWords}`);
+console.log(`Text nodes modified: ${stats.totalChangedTags}`);
+```
+
+### Example 3: Attribute Changes
+
+```typescript
+import { getCustomDiffStats, getChangedTagsList } from 'domoscope';
+
+const oldHTML = `
+<div class="container">
+  <img src="old-image.jpg" alt="Old description" width="300" />
+  <a href="/old-link" title="Old title">Click here</a>
+  <button type="button" disabled>Submit</button>
+</div>
+`;
+
+const newHTML = `
+<div class="container updated">
+  <img src="new-image.jpg" alt="Updated description" width="400" height="300" />
+  <a href="/new-link" title="Updated title" target="_blank">Click here</a>
+  <button type="submit">Submit</button>
+</div>
+`;
+
+const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML, {
+  attributeChangeClass: 'attr-changed',
+  elementChangeClass: 'element-modified',
+  trackedTags: {
+    img: ['src', 'alt', 'width', 'height'],
+    a: ['href', 'title', 'target'],
+    button: ['type', 'disabled'],
+    div: ['class'],
+  },
+});
+
+// Get detailed list of changes
+const changes = getChangedTagsList(stats);
+changes.forEach(({ tagName, count, changedAttributes }) => {
+  console.log(`${tagName}: ${count} elements changed`);
+  console.log(`  Attributes: ${changedAttributes.join(', ')}`);
+});
+
+// Expected output:
+// div: 1 elements changed
+//   Attributes: class
+// img: 1 elements changed
+//   Attributes: src, alt, width, height
+// a: 1 elements changed
+//   Attributes: href, title, target
+// button: 1 elements changed
+//   Attributes: type, disabled
+```
+
+### Example 4: Complex Mixed Changes
+
+```typescript
+import { getCustomDiffStats, ConfigBuilder } from 'domoscope';
+
+const oldHTML = `
+<section class="blog-post">
+  <header>
+    <h1>How to Use APIs</h1>
+    <p class="meta">Published on 2024-01-15</p>
+  </header>
+  <main>
+    <p>APIs are powerful tools for developers.</p>
+    <code>fetch('/api/data')</code>
+    <p>They allow seamless data exchange.</p>
+  </main>
+</section>
+`;
+
+const newHTML = `
+<section class="blog-post featured">
+  <header>
+    <h1>How to Use REST APIs</h1>
+    <p class="meta updated">Published on 2024-01-15, Updated on 2024-10-21</p>
+    <div class="tags">
+      <span class="tag">API</span>
+      <span class="tag">Tutorial</span>
+    </div>
+  </header>
+  <main>
+    <p>REST APIs are powerful tools for modern developers.</p>
+    <pre><code>fetch('/api/v2/data')</code></pre>
+    <p>They allow seamless and efficient data exchange.</p>
+    <p>Here's an example of error handling:</p>
+    <code>try { ... } catch (error) { ... }</code>
+  </main>
+</section>
+`;
+
+const config = new ConfigBuilder()
+  .withStyles({
+    addedClass: 'diff-added',
+    removedClass: 'diff-removed',
+    elementChangeClass: 'diff-changed',
+    attributeChangeClass: 'diff-attr-changed',
+  })
+  .trackTags(['section', 'h1', 'p', 'code', 'pre', 'div', 'span'])
+  .trackAttributes('class')
+  .watchTags('div', 'span', 'pre') // Watch for structural additions
+  .build();
+
+const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML, config);
+
+// Detailed analysis
+console.log('=== CHANGE SUMMARY ===');
+console.log(`Total elements changed: ${stats.totalChangedTags}`);
+console.log(`Elements added: ${stats.totalAddedTags}`);
+console.log(`Words added: ${stats.totalAddedWords}`);
+console.log(`Words removed: ${stats.totalRemovedWords}`);
+
+// Per-tag breakdown
+if (stats.addedTags) {
+  console.log('\n=== ADDED ELEMENTS ===');
+  Object.entries(stats.addedTags).forEach(([tag, count]) => {
+    console.log(`+${count} ${tag} element(s)`);
+  });
+}
+
+if (stats.changedTags) {
+  console.log('\n=== CHANGED ELEMENTS ===');
+  Object.entries(stats.changedTags).forEach(([tag, data]) => {
+    console.log(`~${data.count} ${tag} element(s) modified`);
+    if (data.changedAttributes.length > 0) {
+      console.log(`  Attributes: ${data.changedAttributes.join(', ')}`);
+    }
+  });
+}
+
+// Expected output:
+// === CHANGE SUMMARY ===
+// Total elements changed: 4
+// Elements added: 5
+// Words added: 12
+// Words removed: 4
+//
+// === ADDED ELEMENTS ===
+// +1 div element(s)
+// +2 span element(s)
+// +1 pre element(s)
+// +1 p element(s)
+//
+// === CHANGED ELEMENTS ===
+// ~1 section element(s) modified
+//   Attributes: class
+// ~1 h1 element(s) modified
+// ~1 p element(s) modified
+//   Attributes: class
+// ~1 code element(s) modified
+```
+
+### Example 5: CSS Styling for Visual Diff
+
+Add this CSS to visualize the changes:
+
+```css
+/* Added content styling */
+.diff-added {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border-left: 3px solid #28a745;
+}
+
+.highlight-added {
+  background-color: #28a745;
+  color: white;
+  font-weight: bold;
+  padding: 1px 3px;
+  border-radius: 2px;
+}
+
+/* Removed content styling */
+.diff-removed {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border-left: 3px solid #dc3545;
+  text-decoration: line-through;
+}
+
+.highlight-removed {
+  background-color: #dc3545;
+  color: white;
+  font-weight: bold;
+  padding: 1px 3px;
+  border-radius: 2px;
+  text-decoration: line-through;
+}
+
+/* Changed elements styling */
+.diff-changed {
+  border: 2px dashed #ffc107;
+  padding: 4px;
+  border-radius: 4px;
+  background-color: #fff3cd;
+}
+
+/* Attribute changes styling */
+.diff-attr-changed {
+  outline: 2px dotted #17a2b8;
+  outline-offset: 2px;
+  background-color: #d1ecf1;
+}
+
+/* Word-level changes */
+.word-added {
+  background-color: #90ee90;
+  font-weight: bold;
+}
+
+.word-removed {
+  background-color: #ffb6c1;
+  text-decoration: line-through;
+}
+
+/* Element modifications */
+.element-modified {
+  box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+}
+
+.attr-changed {
+  border-bottom: 2px wavy #007bff;
+}
+```
+
 ### Modular Imports
 
 Domoscope supports modular imports for tree-shaking and reduced bundle size:
