@@ -55,9 +55,6 @@
     "size": "size-limit",
     "analyze": "npm run build && npm run size"
   },
-  "scripts": {
-    "playground": "npx http-server -c-1 -p 8000"
-  },
   "keywords": [
     "html",
     "diff",
