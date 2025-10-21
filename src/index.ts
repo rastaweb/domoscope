@@ -154,11 +154,16 @@ export function getCustomDiffStats(
   oldContainer.setAttribute('data-diff-old-tree', 'true');
   newContainer.setAttribute('data-diff-new-tree', 'true');
 
-  // Run the diff operation
+  // Run the diff operation with improved element matching
+  // Compare elements with enhanced similarity for structural matching
   compareElements(
     Array.from(oldContainer.children) as Element[],
     Array.from(newContainer.children) as Element[],
-    options
+    {
+      ...options,
+      // Use very low threshold for top-level elements to encourage structural matching
+      minSimilarityThreshold: 0.1,
+    }
   );
 
   // Collect all elements for the result

@@ -14,7 +14,7 @@
 export type ElementChangeHandler = (
   oldEl: Element | null,
   newEl: Element | null,
-  changeType: "tag" | "attribute" | "tag-added" | "tag-removed",
+  changeType: 'tag' | 'attribute' | 'tag-added' | 'tag-removed',
   changedAttrs?: string[]
 ) => void | Element | null;
 
@@ -82,7 +82,7 @@ export interface DiffResultWithStats {
   diffResult: DiffResult;
 
   /** Comprehensive statistics about the changes */
-  stats: import("./diff.js").DiffStats;
+  stats: import('./diff.js').DiffStats;
 }
 
 /**
@@ -97,11 +97,12 @@ export interface PerformanceConfig {
 
   /** Enable memoization for repeated comparisons */
   enableMemoization?: boolean;
+
+  /** Ignore whitespace-only text nodes when counting totalAddedTexts/totalRemovedTexts */
+  ignoreWhitespaceTexts?: boolean;
 }
 
 /**
  * Extended options including performance configurations
  */
-export interface ExtendedCompareOptions
-  extends CompareOptions,
-    PerformanceConfig {}
+export interface ExtendedCompareOptions extends CompareOptions, PerformanceConfig {}

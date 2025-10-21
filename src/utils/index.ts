@@ -17,12 +17,40 @@ export function isRelevantNode(node: Node): boolean {
  */
 export function nodeKey(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
-    return 'T';
+    const text = (node.textContent || '').trim();
+    return `T:${text}`;
   }
-  return `E:${(node as Element).tagName}`;
-}
 
-/**
+  const element = node as Element;
+  const tagName = element.tagName;
+
+  // For structural elements like table, thead, tbody, tr - use only tag name
+  // to allow content changes within them
+  const structuralTags = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'UL', 'OL', 'DIV'];
+  if (structuralTags.includes(tagName)) {
+    return `E:${tagName}`;
+  }
+
+  // For heading elements, use only tag name to allow content changes
+  const headingTags = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+  if (headingTags.includes(tagName)) {
+    return `E:${tagName}`;
+  }
+
+  // For content elements, use a more flexible approach
+  const textContent = (element.textContent || '').trim();
+
+  // For very short content (1-2 words), include full content for precise matching
+  const words = textContent.split(/\s+/).filter((w) => w.length > 0);
+  if (words.length <= 2) {
+    return `E:${tagName}:${textContent}`;
+  }
+
+  // For longer content, use tag + first word to allow partial content matching
+  // This helps match elements like <td>Rezaei</td> with <td>Rezaei hastam</td>
+  const firstWord = words[0] || '';
+  return `E:${tagName}:${firstWord}`;
+} /**
  * Wrap an element with a wrapper element containing the specified class
  * Preserves element hierarchy and relationships
  */

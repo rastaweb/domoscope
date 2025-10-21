@@ -3,12 +3,12 @@
  * Implements Dynamic Programming patterns for improved performance
  */
 
-import type { 
-  LCSMatch, 
-  LCSConfig, 
-  SimilarityScore, 
+import type {
+  LCSMatch,
+  LCSConfig,
+  SimilarityScore,
   MemoCache,
-  PerformanceMetrics 
+  PerformanceMetrics,
 } from '../types/index.js';
 
 /**
@@ -43,19 +43,15 @@ const MAX_CACHE_SIZE = 1000;
  * Create a cache key for LCS computation
  */
 function createLCSKey(a: string[], b: string[]): string {
-  return `${a.join("|")}::${b.join("|")}`;
+  return `${a.join('|')}::${b.join('|')}`;
 }
 
 /**
  * Create a cache key for element similarity
  */
 function createSimilarityKey(a: Element, b: Element): string {
-  const aKey = `${a.tagName}:${a.id}:${Array.from(a.classList)
-    .sort()
-    .join(",")}`;
-  const bKey = `${b.tagName}:${b.id}:${Array.from(b.classList)
-    .sort()
-    .join(",")}`;
+  const aKey = `${a.tagName}:${a.id}:${Array.from(a.classList).sort().join(',')}`;
+  const bKey = `${b.tagName}:${b.id}:${Array.from(b.classList).sort().join(',')}`;
   return `${aKey}::${bKey}`;
 }
 
@@ -86,12 +82,7 @@ function limitCacheSize<K, V>(cache: MemoCache<K, V>): void {
 /**
  * Get cached result or compute and cache new result
  */
-function memoized<K, V>(
-  cache: MemoCache<K, V>,
-  key: K,
-  computeFn: () => V,
-  enabled = true
-): V {
+function memoized<K, V>(cache: MemoCache<K, V>, key: K, computeFn: () => V, enabled = true): V {
   if (!enabled) {
     return computeFn();
   }
@@ -123,11 +114,7 @@ function memoized<K, V>(
  * Optimized Longest Common Subsequence algorithm with memoization
  * Uses dynamic programming with optional space optimization for large inputs
  */
-export function computeLCS(
-  a: string[],
-  b: string[],
-  config: LCSConfig = {}
-): LCSMatch[] {
+export function computeLCS(a: string[], b: string[], config: LCSConfig = {}): LCSMatch[] {
   const startTime = performance.now();
 
   const key = createLCSKey(a, b);
@@ -146,11 +133,7 @@ export function computeLCS(
 /**
  * Internal LCS computation with space optimization for large inputs
  */
-function computeLCSInternal(
-  a: string[],
-  b: string[],
-  config: LCSConfig
-): LCSMatch[] {
+function computeLCSInternal(a: string[], b: string[], config: LCSConfig): LCSMatch[] {
   const n = a.length;
   const m = b.length;
 
@@ -160,9 +143,7 @@ function computeLCSInternal(
   }
 
   // Standard DP approach for smaller inputs
-  const dp: number[][] = Array.from({ length: n + 1 }, () =>
-    Array(m + 1).fill(0)
-  );
+  const dp: number[][] = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
 
   // Fill DP table
   for (let i = n - 1; i >= 0; i--) {
@@ -317,18 +298,19 @@ function computeSimilarityScore(a: Element, b: Element): SimilarityScore {
 
   score += attrOverlap * 0.5;
 
-  // Text content similarity
-  const aText = (a.textContent || "").trim();
-  const bText = (b.textContent || "").trim();
+  // Text content similarity (enhanced for better matching)
+  const aText = (a.textContent || '').trim();
+  const bText = (b.textContent || '').trim();
 
   if (aText && bText) {
     if (aText === bText) {
-      score += 3;
+      score += 5; // Strong bonus for exact text match
     } else {
-      // Simple token overlap for text content
+      // Enhanced text similarity for partial matches
       const aTokens = new Set(tokenizeForSimilarity(aText));
       const bTokens = new Set(tokenizeForSimilarity(bText));
       let textOverlap = 0;
+      const totalTokens = Math.max(aTokens.size, bTokens.size);
 
       for (const token of aTokens) {
         if (bTokens.has(token)) {
@@ -336,8 +318,20 @@ function computeSimilarityScore(a: Element, b: Element): SimilarityScore {
         }
       }
 
-      score += textOverlap * 0.3;
+      // Calculate overlap percentage and give significant score for partial matches
+      const overlapRatio = totalTokens > 0 ? textOverlap / totalTokens : 0;
+
+      if (overlapRatio >= 0.5) {
+        // If 50%+ of words match, give substantial similarity score
+        score += 3 + overlapRatio * 2;
+      } else if (overlapRatio > 0) {
+        // Some overlap, give partial score
+        score += textOverlap * 0.5;
+      }
     }
+  } else if (!aText && !bText) {
+    // Both empty, that's a perfect match for text content
+    score += 2;
   }
 
   // Structural similarity (number of children)
@@ -347,8 +341,7 @@ function computeSimilarityScore(a: Element, b: Element): SimilarityScore {
   if (aChildCount === bChildCount && aChildCount > 0) {
     score += 1;
   } else if (aChildCount > 0 && bChildCount > 0) {
-    const childRatio =
-      Math.min(aChildCount, bChildCount) / Math.max(aChildCount, bChildCount);
+    const childRatio = Math.min(aChildCount, bChildCount) / Math.max(aChildCount, bChildCount);
     score += childRatio * 0.5;
   }
 
@@ -383,14 +376,14 @@ export function computeWordDiff(
   oldText: string,
   newText: string,
   maxLength = 10000
-): Array<{ type: "equal" | "added" | "removed"; text: string }> {
+): Array<{ type: 'equal' | 'added' | 'removed'; text: string }> {
   const startTime = performance.now();
 
   // Skip expensive word diffing for very long texts
   if (oldText.length > maxLength || newText.length > maxLength) {
     const result = [
-      { type: "removed" as const, text: oldText },
-      { type: "added" as const, text: newText },
+      { type: 'removed' as const, text: oldText },
+      { type: 'added' as const, text: newText },
     ];
     performanceMetrics.textDiffTime += performance.now() - startTime;
     return result;
@@ -401,8 +394,7 @@ export function computeWordDiff(
 
   const matches = computeLCS(a, b, { enableMemoization: true, maxSize: 1000 });
 
-  const tokens: Array<{ type: "equal" | "added" | "removed"; text: string }> =
-    [];
+  const tokens: Array<{ type: 'equal' | 'added' | 'removed'; text: string }> = [];
   let i = 0,
     j = 0,
     matchIndex = 0;
@@ -414,15 +406,15 @@ export function computeWordDiff(
 
     // Process unmatched tokens
     while (i < nextMatchI) {
-      tokens.push({ type: "removed", text: a[i++]! });
+      tokens.push({ type: 'removed', text: a[i++]! });
     }
     while (j < nextMatchJ) {
-      tokens.push({ type: "added", text: b[j++]! });
+      tokens.push({ type: 'added', text: b[j++]! });
     }
 
     // Process matched token
     if (match) {
-      tokens.push({ type: "equal", text: a[i]! });
+      tokens.push({ type: 'equal', text: a[i]! });
       i++;
       j++;
       matchIndex++;
@@ -434,7 +426,7 @@ export function computeWordDiff(
   for (const token of tokens) {
     const last = merged[merged.length - 1];
     if (last && last.type === token.type) {
-      last.text += " " + token.text;
+      last.text += ' ' + token.text;
     } else {
       merged.push({ ...token });
     }
@@ -493,11 +485,7 @@ export function resetPerformanceMetrics(): void {
 /**
  * Configure cache settings
  */
-export function configureCaching(options: {
-  ttl?: number;
-  maxSize?: number;
-  enabled?: boolean;
-}) {
+export function configureCaching(options: { ttl?: number; maxSize?: number; enabled?: boolean }) {
   if (options.ttl !== undefined) {
     // Update TTL (would need to be implemented in cache cleanup)
   }

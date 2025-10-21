@@ -39,9 +39,6 @@ export class DiffEngine {
     const watchAll = watchedTags ? watchedTags.includes('*') : false;
     const watchedSet = watchedTags ? new Set(watchedTags.filter((t) => t !== '*')) : null;
 
-    // Improve similarity threshold for better structural change detection
-    const minThreshold = this.options.minSimilarityThreshold ?? 3.0; // Increased default threshold
-
     // Pair elements by similarity
     for (const newElement of newElements) {
       const candidates = Array.from(oldPool);
@@ -75,7 +72,22 @@ export class DiffEngine {
         }
       }
 
-      if (bestMatch && bestScore >= minThreshold) {
+      // Dynamic threshold based on element type and content
+      let dynamicThreshold = this.options.minSimilarityThreshold ?? 0.5;
+
+      // Lower threshold for same-tag elements to encourage matching
+      if (bestMatch && bestMatch.tagName === newElement.tagName) {
+        // Same tag type - be more lenient about content differences
+        dynamicThreshold = Math.min(dynamicThreshold, 2.0);
+
+        // Even more lenient for content elements that commonly change
+        const contentTags = ['TD', 'TH', 'P', 'SPAN', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+        if (contentTags.includes(newElement.tagName)) {
+          dynamicThreshold = Math.min(dynamicThreshold, 1.0);
+        }
+      }
+
+      if (bestMatch && bestScore >= dynamicThreshold) {
         // Pair found - remove from pool and compare
         matchedOld.add(bestMatch);
         oldPool.delete(bestMatch);
@@ -207,6 +219,10 @@ export class DiffEngine {
     let newIndex = 0;
     let matchIndex = 0;
 
+    // Track unmatched text nodes for potential comparison
+    const unmatchedOldTextNodes: { node: Text; index: number }[] = [];
+    const unmatchedNewTextNodes: { node: Text; index: number }[] = [];
+
     while (oldIndex < oldChildren.length || newIndex < newChildren.length) {
       const match = matches[matchIndex];
       const oldMatchIndex = match ? match[0] : null;
@@ -214,24 +230,28 @@ export class DiffEngine {
 
       // Handle unmatched old nodes (removed)
       while (oldIndex < (oldMatchIndex ?? oldChildren.length)) {
-        const oldNode = oldChildren[oldIndex++]!;
+        const oldNode = oldChildren[oldIndex]!;
         if (oldNode.nodeType === Node.TEXT_NODE) {
-          replaceTextNodeWithWrapped(oldNode as Text, 'removed', this.options);
+          // Store for potential text comparison later
+          unmatchedOldTextNodes.push({ node: oldNode as Text, index: oldIndex });
         } else {
           // This is a removed element - handle it properly
           this.handleRemovedElement(oldNode as Element, watchedSet, watchAll);
         }
+        oldIndex++;
       }
 
       // Handle unmatched new nodes (added)
       while (newIndex < (newMatchIndex ?? newChildren.length)) {
-        const newNode = newChildren[newIndex++]!;
+        const newNode = newChildren[newIndex]!;
         if (newNode.nodeType === Node.TEXT_NODE) {
-          replaceTextNodeWithWrapped(newNode as Text, 'added', this.options);
+          // Store for potential text comparison later
+          unmatchedNewTextNodes.push({ node: newNode as Text, index: newIndex });
         } else {
           // This is an added element - handle it properly
           this.handleAddedElement(newNode as Element, watchedSet, watchAll);
         }
+        newIndex++;
       }
 
       // Process matched pair
@@ -270,6 +290,86 @@ export class DiffEngine {
         break; // No more matches
       }
     }
+
+    // Post-process: Try to match similar unmatched text nodes
+    this.matchSimilarTextNodes(unmatchedOldTextNodes, unmatchedNewTextNodes);
+  }
+
+  /**
+   * Try to match similar unmatched text nodes for comparison
+   */
+  private matchSimilarTextNodes(
+    unmatchedOld: { node: Text; index: number }[],
+    unmatchedNew: { node: Text; index: number }[]
+  ): void {
+    const processedOld = new Set<number>();
+    const processedNew = new Set<number>();
+
+    // Find the best matches between unmatched text nodes
+    for (const oldItem of unmatchedOld) {
+      if (processedOld.has(oldItem.index)) continue;
+
+      let bestMatch: { node: Text; index: number } | null = null;
+      let bestSimilarity = 0;
+
+      for (const newItem of unmatchedNew) {
+        if (processedNew.has(newItem.index)) continue;
+
+        const oldText = (oldItem.node.textContent || '').trim();
+        const newText = (newItem.node.textContent || '').trim();
+
+        // Skip empty text nodes
+        if (!oldText || !newText) continue;
+
+        // Calculate text similarity (simple word overlap ratio)
+        const similarity = this.calculateTextSimilarity(oldText, newText);
+
+        // Use a threshold - only match if similarity is reasonable
+        if (similarity > 0.3 && similarity > bestSimilarity) {
+          bestMatch = newItem;
+          bestSimilarity = similarity;
+        }
+      }
+
+      // If we found a good match, compare the texts
+      if (bestMatch && bestSimilarity > 0.3) {
+        this.compareTextNodes(oldItem.node, bestMatch.node);
+        processedOld.add(oldItem.index);
+        processedNew.add(bestMatch.index);
+      }
+    }
+
+    // Handle remaining unmatched text nodes as pure additions/removals
+    for (const oldItem of unmatchedOld) {
+      if (!processedOld.has(oldItem.index)) {
+        replaceTextNodeWithWrapped(oldItem.node, 'removed', this.options);
+      }
+    }
+
+    for (const newItem of unmatchedNew) {
+      if (!processedNew.has(newItem.index)) {
+        replaceTextNodeWithWrapped(newItem.node, 'added', this.options);
+      }
+    }
+  }
+
+  /**
+   * Calculate similarity between two text strings based on word overlap
+   */
+  private calculateTextSimilarity(text1: string, text2: string): number {
+    const words1 = text1.toLowerCase().split(/\s+/).filter(Boolean);
+    const words2 = text2.toLowerCase().split(/\s+/).filter(Boolean);
+
+    if (words1.length === 0 && words2.length === 0) return 1;
+    if (words1.length === 0 || words2.length === 0) return 0;
+
+    const set1 = new Set(words1);
+    const set2 = new Set(words2);
+    const intersection = new Set([...set1].filter((word) => set2.has(word)));
+
+    // Calculate Jaccard similarity
+    const union = new Set([...set1, ...set2]);
+    return intersection.size / union.size;
   }
 
   /**
@@ -317,6 +417,8 @@ export class StatsCollector {
       totalRemovedTexts: 0,
       totalAddedTags: 0,
       totalRemovedTags: 0,
+      totalAddedWords: 0,
+      totalRemovedWords: 0,
       addedTags: {},
       removedTags: {},
       changedTags: {},
@@ -333,6 +435,11 @@ export class StatsCollector {
     // Traverse and count changes
     const traverseAndCount = (element: Element): void => {
       const classes = element.className.split(' ');
+
+      // Skip counting elements that are diff markup (spans created by the diff algorithm)
+      const isDiffMarkup =
+        element.tagName.toLowerCase() === 'span' &&
+        (classes.includes(addedClass) || classes.includes(removedClass));
 
       // Count element-level changes
       if (classes.includes(elementChangeClass) || classes.includes(attributeChangeClass)) {
@@ -372,39 +479,68 @@ export class StatsCollector {
         }
       }
 
-      // Count text-level changes
-      if (classes.includes(addedClass)) {
-        stats.totalAddedTexts++;
-      }
-      if (classes.includes(removedClass)) {
-        stats.totalRemovedTexts++;
+      // Count text-level changes with optional whitespace filtering (only for diff markup spans)
+      if (isDiffMarkup) {
+        if (classes.includes(addedClass)) {
+          const text = element.textContent || '';
+          const isWhitespaceOnly = /^\s*$/.test(text);
+
+          // Count text nodes (with optional whitespace filtering)
+          if (!this.options.ignoreWhitespaceTexts || !isWhitespaceOnly) {
+            stats.totalAddedTexts++;
+          }
+
+          // Count words in added text
+          if (!isWhitespaceOnly) {
+            const words = this.countWords(text);
+            stats.totalAddedWords += words;
+          }
+        }
+
+        if (classes.includes(removedClass)) {
+          const text = element.textContent || '';
+          const isWhitespaceOnly = /^\s*$/.test(text);
+
+          // Count text nodes (with optional whitespace filtering)
+          if (!this.options.ignoreWhitespaceTexts || !isWhitespaceOnly) {
+            stats.totalRemovedTexts++;
+          }
+
+          // Count words in removed text
+          if (!isWhitespaceOnly) {
+            const words = this.countWords(text);
+            stats.totalRemovedWords += words;
+          }
+        }
       }
 
-      // Count added tags per tag type
+      // Count added tags per tag type (only from data attributes, not diff markup)
       const addedTagName = element.getAttribute('data-diff-added-tag');
       if (addedTagName) {
         stats.totalAddedTags++;
         stats.addedTags![addedTagName] = (stats.addedTags![addedTagName] || 0) + 1;
       }
 
-      // Count removed tags per tag type
+      // Count removed tags per tag type (only from data attributes, not diff markup)
       const removedTagName = element.getAttribute('data-diff-removed-tag');
       if (removedTagName) {
         stats.totalRemovedTags++;
         stats.removedTags![removedTagName] = (stats.removedTags![removedTagName] || 0) + 1;
       }
 
-      // Count structural additions/removals
-      if (classes.includes(addedClass) && element.children.length > 0) {
-        const tagName = element.tagName.toLowerCase();
-        stats.totalAddedTags++;
-        stats.addedTags![tagName] = (stats.addedTags![tagName] || 0) + 1;
-      }
+      // Count structural additions/removals (but skip diff markup spans)
+      if (!isDiffMarkup) {
+        if (classes.includes(addedClass) && element.children.length > 0) {
+          const tagName = element.tagName.toLowerCase();
+          stats.totalAddedTags++;
+          stats.addedTags![tagName] = (stats.addedTags![tagName] || 0) + 1;
+        }
 
-      if (classes.includes(removedClass) && element.children.length > 0) {
-        const tagName = element.tagName.toLowerCase();
-        stats.totalRemovedTags++;
-        stats.removedTags![tagName] = (stats.removedTags![tagName] || 0) + 1;
+        if (classes.includes(removedClass) && element.children.length > 0) {
+          const tagName = element.tagName.toLowerCase();
+          stats.totalRemovedTags++;
+          stats.removedTags![tagName] = (stats.removedTags![tagName] || 0) + 1;
+        }
       }
 
       // Recursively process children
@@ -415,6 +551,38 @@ export class StatsCollector {
     rootElements.forEach(traverseAndCount);
 
     return stats;
+  }
+
+  /**
+   * Count the number of words in a text string
+   * Words are defined as sequences of non-whitespace characters, excluding HTML tags
+   */
+  private countWords(text: string): number {
+    if (!text || text.trim() === '') {
+      return 0;
+    }
+
+    // Clean the text: remove any HTML tags that might have slipped through
+    const cleanText = text
+      .replace(/<[^>]*>/g, '') // Remove any HTML tags
+      .replace(/&[a-zA-Z0-9#]+;/g, ' '); // Replace HTML entities with space
+
+    // Split by whitespace and filter out empty strings and tag-like content
+    const words = cleanText
+      .trim()
+      .split(/\s+/)
+      .filter((word) => {
+        // Filter out empty strings
+        if (word.length === 0) return false;
+
+        // Filter out anything that looks like an HTML tag or entity
+        if (word.match(/^<.*>$/) || word.match(/^&[a-zA-Z0-9#]+;$/)) return false;
+
+        // Only count words that contain letters or numbers (exclude pure punctuation)
+        return word.match(/[a-zA-Z0-9]/);
+      });
+
+    return words.length;
   }
 }
 
@@ -454,6 +622,7 @@ export function formatStatsSummary(stats: DiffStats): string {
     `\n📊 Totals: ${stats.totalAddedTags} added, ${stats.totalRemovedTags} removed, ${stats.totalChangedTags} changed`
   );
   lines.push(`📝 Text changes: ${stats.totalAddedTexts} added, ${stats.totalRemovedTexts} removed`);
+  lines.push(`📖 Word changes: ${stats.totalAddedWords} added, ${stats.totalRemovedWords} removed`);
 
   return lines.join('\n');
 }

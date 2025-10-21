@@ -5,7 +5,7 @@
 /**
  * Represents the type of change in a diff token
  */
-export type TokenType = "equal" | "added" | "removed";
+export type TokenType = 'equal' | 'added' | 'removed';
 
 /**
  * A single token in a word-level diff, representing a piece of text with its change type
@@ -33,6 +33,12 @@ export type DiffStats = {
 
   /** Number of removed elements */
   totalRemovedTags: number;
+
+  /** Total number of words added across all text content */
+  totalAddedWords: number;
+
+  /** Total number of words removed across all text content */
+  totalRemovedWords: number;
 
   /** Per-tag statistics for added elements (e.g., { a: 5, img: 2 }) */
   addedTags?: Record<string, number>;
