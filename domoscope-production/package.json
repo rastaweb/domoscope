@@ -1,0 +1,61 @@
+{
+  "name": "domoscope",
+  "version": "1.0.0",
+  "description": "Advanced HTML diff engine with intelligent DOM comparison, configurable tracking, and comprehensive statistics",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./config": {
+      "import": "./dist/config/index.js",
+      "types": "./dist/config/index.d.ts"
+    },
+    "./algorithms": {
+      "import": "./dist/algorithms/index.js",
+      "types": "./dist/algorithms/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core/index.js",
+      "types": "./dist/core/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "keywords": [
+    "html",
+    "diff",
+    "dom",
+    "comparison",
+    "typescript",
+    "html-diff",
+    "dom-diff",
+    "content-comparison",
+    "change-detection",
+    "diff-engine"
+  ],
+  "author": {
+    "name": "kamran taghinejad",
+    "email": "kamrantaghinejad.dev@gmail.com"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.5.0"
+  }
+}
