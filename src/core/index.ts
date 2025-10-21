@@ -39,6 +39,9 @@ export class DiffEngine {
     const watchAll = watchedTags ? watchedTags.includes('*') : false;
     const watchedSet = watchedTags ? new Set(watchedTags.filter((t) => t !== '*')) : null;
 
+    // Improve similarity threshold for better structural change detection
+    const minThreshold = this.options.minSimilarityThreshold ?? 3.0; // Increased default threshold
+
     // Pair elements by similarity
     for (const newElement of newElements) {
       const candidates = Array.from(oldPool);
@@ -52,11 +55,18 @@ export class DiffEngine {
           this.options.enableMemoization ?? true
         );
 
-        // Prefer same tag matches
+        // Prefer same tag matches more strongly
         if (candidate.tagName === newElement.tagName) {
-          score += 1;
+          score += 2; // Increased bonus for same tag
         } else {
-          score -= 0.2; // Slight penalty for tag mismatch
+          score -= 1.0; // Higher penalty for tag mismatch
+        }
+
+        // Additional bonus for exact text content match
+        const candidateText = (candidate.textContent || '').trim();
+        const newElementText = (newElement.textContent || '').trim();
+        if (candidateText && newElementText && candidateText === newElementText) {
+          score += 3; // Strong bonus for exact text match
         }
 
         if (score > bestScore) {
@@ -65,13 +75,11 @@ export class DiffEngine {
         }
       }
 
-      const minThreshold = this.options.minSimilarityThreshold ?? 0;
-
       if (bestMatch && bestScore >= minThreshold) {
         // Pair found - remove from pool and compare
         matchedOld.add(bestMatch);
         oldPool.delete(bestMatch);
-        this.compareNode(bestMatch, newElement);
+        this.compareNode(bestMatch, newElement, watchedSet, watchAll);
       } else {
         // New element with no suitable match
         this.handleAddedElement(newElement, watchedSet, watchAll);
@@ -93,8 +101,10 @@ export class DiffEngine {
     watchAll = false
   ): void {
     const tagLower = element.tagName.toLowerCase();
-
     const shouldWatch = watchAll || (watchedSet && watchedSet.has(tagLower));
+
+    // ALWAYS set the data attribute for statistics tracking
+    element.setAttribute('data-diff-added-tag', element.tagName.toLowerCase());
 
     if (shouldWatch) {
       const wrapperTag = this.options.wrapperTag ?? 'span';
@@ -118,12 +128,10 @@ export class DiffEngine {
         // Default wrapping for added watched tag
         wrapElement(element, elementClass, wrapperTag);
       }
-    } else {
-      // Mark all text descendants as added
-      markDescendantTextNodes(element, 'added', this.options);
-      // Store tag info for statistics
-      element.setAttribute('data-diff-added-tag', element.tagName.toLowerCase());
     }
+
+    // Mark all text descendants as added
+    markDescendantTextNodes(element, 'added', this.options);
   }
 
   /**
@@ -136,6 +144,9 @@ export class DiffEngine {
   ): void {
     const tagLower = element.tagName.toLowerCase();
     const shouldWatch = watchAll || (watchedSet && watchedSet.has(tagLower));
+
+    // ALWAYS set the data attribute for statistics tracking
+    element.setAttribute('data-diff-removed-tag', element.tagName.toLowerCase());
 
     if (shouldWatch) {
       const wrapperTag = this.options.wrapperTag ?? 'span';
@@ -159,20 +170,21 @@ export class DiffEngine {
         // Default wrapping with removed class
         wrapElement(element, removedClass, wrapperTag);
       }
-
-      // Mark descendant text nodes as removed
-      markDescendantTextNodes(element, 'removed', this.options);
-    } else {
-      markDescendantTextNodes(element, 'removed', this.options);
-      // Store tag info for statistics
-      element.setAttribute('data-diff-removed-tag', element.tagName.toLowerCase());
     }
+
+    // Mark descendant text nodes as removed
+    markDescendantTextNodes(element, 'removed', this.options);
   }
 
   /**
    * Compare two matched elements recursively
    */
-  private compareNode(oldElement: Element, newElement: Element): void {
+  private compareNode(
+    oldElement: Element,
+    newElement: Element,
+    watchedSet: Set<string> | null = null,
+    watchAll = false
+  ): void {
     // Detect and wrap element-level changes first
     detectAndWrapElementChange(oldElement, newElement, this.options);
 
@@ -206,7 +218,8 @@ export class DiffEngine {
         if (oldNode.nodeType === Node.TEXT_NODE) {
           replaceTextNodeWithWrapped(oldNode as Text, 'removed', this.options);
         } else {
-          markDescendantTextNodes(oldNode as Element, 'removed', this.options);
+          // This is a removed element - handle it properly
+          this.handleRemovedElement(oldNode as Element, watchedSet, watchAll);
         }
       }
 
@@ -216,7 +229,8 @@ export class DiffEngine {
         if (newNode.nodeType === Node.TEXT_NODE) {
           replaceTextNodeWithWrapped(newNode as Text, 'added', this.options);
         } else {
-          markDescendantTextNodes(newNode as Element, 'added', this.options);
+          // This is an added element - handle it properly
+          this.handleAddedElement(newNode as Element, watchedSet, watchAll);
         }
       }
 
@@ -233,7 +247,7 @@ export class DiffEngine {
           newNode.nodeType === Node.ELEMENT_NODE
         ) {
           // Recursively compare element children
-          this.compareNode(oldNode as Element, newNode as Element);
+          this.compareNode(oldNode as Element, newNode as Element, watchedSet, watchAll);
         } else {
           // Different node types - mark as removed/added
           if (oldNode.nodeType === Node.TEXT_NODE) {

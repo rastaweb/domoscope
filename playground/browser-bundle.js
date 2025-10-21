@@ -14,5 +14,3 @@ window.domoscope = DomoScope;
 
 // For backwards compatibility, also expose individual functions
 Object.assign(window.domoscope, DomoScope);
-
-console.log('Domoscope library loaded successfully!');
