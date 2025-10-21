@@ -34,6 +34,8 @@ describe('Domoscope', () => {
     expect(result).toBeDefined();
     expect(result.diffResult).toBeDefined();
     expect(result.stats).toBeDefined();
+    expect(Array.isArray(result.diffResult.oldRootElements)).toBe(true);
+    expect(Array.isArray(result.diffResult.newRootElements)).toBe(true);
     expect(Array.isArray(result.diffResult.rootElements)).toBe(true);
     expect(typeof result.stats.totalChangedTags).toBe('number');
   });

@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Domoscope - React-style Diff Highlighting Demo</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+        background-color: #f8fafc;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .editor-section {
+        display: flex;
+        gap: 16px;
+      }
+
+      .editor-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .section-header {
+        background-color: #374151;
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .old-header {
+        background-color: #dc2626;
+      }
+
+      .new-header {
+        background-color: #16a34a;
+      }
+
+      textarea {
+        border: 1px solid #9ca3af;
+        border-radius: 6px;
+        padding: 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 200px;
+      }
+
+      .render-area {
+        border: 1px solid #9ca3af;
+        border-radius: 6px;
+        padding: 16px;
+        min-height: 200px;
+        background-color: white;
+      }
+
+      .stats-panel {
+        background-color: #f1f5f9;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .stat-card {
+        background-color: white;
+        padding: 12px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 4px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      /* DIFF STYLING - Matching your requirements */
+
+      /* Removed content: Red background, white text */
+      .diff-removed {
+        background-color: #dc2626 !important;
+        color: white !important;
+        padding: 2px 4px;
+        border-radius: 3px;
+        text-decoration: line-through;
+        font-weight: 500;
+      }
+
+      /* Added content: Green background, white text */
+      .diff-added {
+        background-color: #16a34a !important;
+        color: white !important;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-weight: 500;
+      }
+
+      /* Changed attributes: Blue outline */
+      .diff-attr-changed {
+        outline: 2px solid #2563eb !important;
+        outline-offset: 1px;
+        border-radius: 2px;
+      }
+
+      /* Changed elements */
+      .diff-element-changed {
+        border: 1px dashed #f59e0b;
+        padding: 2px;
+        border-radius: 3px;
+        background-color: rgba(245, 158, 11, 0.1);
+      }
+
+      /* Ensure text visibility */
+      .diff-removed *,
+      .diff-removed span {
+        color: white !important;
+      }
+
+      .diff-added *,
+      .diff-added span {
+        color: white !important;
+      }
+
+      .legend {
+        background-color: white;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        margin-top: 16px;
+      }
+
+      .legend-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .legend-example {
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 14px;
+      }
+
+      .instructions {
+        background-color: #dbeafe;
+        border: 1px solid #93c5fd;
+        border-radius: 8px;
+        padding: 16px;
+        color: #1e40af;
+      }
+
+      .blue-600 {
+        color: #2563eb;
+      }
+      .green-600 {
+        color: #16a34a;
+      }
+      .red-600 {
+        color: #dc2626;
+      }
+      .yellow-600 {
+        color: #ca8a04;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 style="text-align: center; color: #374151; margin-bottom: 30px">
+        🔍 Domoscope - React-style Diff Highlighting Demo
+      </h1>
+
+      <!-- Stats Panel -->
+      <div id="stats-panel" class="stats-panel">
+        <h2 style="margin: 0 0 16px 0; color: #374151">Diff Statistics</h2>
+        <div class="stats-grid" id="stats-grid">
+          <!-- Stats will be populated here -->
+        </div>
+      </div>
+
+      <!-- Editor Section -->
+      <div class="editor-section">
+        <div class="editor-column">
+          <div class="section-header">OLD CONTENT</div>
+          <textarea id="old-content" placeholder="Enter old HTML content...">
+<h1>man title hastam</h1>
+<p>lorem ipsum oblador amet dide.</p>
+<p>man paragraph 2 hastam 
+  <span>manam span hastam</span>
+</p></textarea
+          >
+        </div>
+        <div class="editor-column">
+          <div class="section-header">NEW CONTENT</div>
+          <textarea id="new-content" placeholder="Enter new HTML content...">
+<h1>man updated title hastam</h1>
+<p>lorem ipsum oblador amet dide with more content.</p>
+<p>man paragraph 2 hastam 
+  <span class="highlight">manam span hastam</span>
+</p>
+<div>new added div element</div></textarea
+          >
+        </div>
+      </div>
+
+      <!-- Render Section -->
+      <div class="editor-section">
+        <div class="editor-column">
+          <div class="section-header old-header">🔴 OLD CONTENT (With Removed Highlights)</div>
+          <div id="old-render" class="render-area"></div>
+        </div>
+        <div class="editor-column">
+          <div class="section-header new-header">🟢 NEW CONTENT (With Added Highlights)</div>
+          <div id="new-render" class="render-area"></div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend">
+        <h3 style="margin: 0 0 12px 0; color: #374151">Diff Legend</h3>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="legend-example diff-added">Added Content</span>
+            <span style="color: #64748b; font-size: 14px">Green background, white text</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-example diff-removed">Removed Content</span>
+            <span style="color: #64748b; font-size: 14px"
+              >Red background, white text, strikethrough</span
+            >
+          </div>
+          <div class="legend-item">
+            <span class="legend-example diff-attr-changed" style="border: 1px solid #d1d5db"
+              >Changed Attributes</span
+            >
+            <span style="color: #64748b; font-size: 14px">Blue outline</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-example diff-element-changed">Modified Elements</span>
+            <span style="color: #64748b; font-size: 14px">Orange dashed border</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <h3 style="margin: 0 0 8px 0">Instructions</h3>
+        <ul style="margin: 0; padding-left: 16px">
+          <li>Modify the content in the textareas above to see live diff highlighting</li>
+          <li>
+            Added content appears with
+            <span class="diff-added" style="padding: 1px 3px">green background</span>
+          </li>
+          <li>
+            Removed content appears with
+            <span class="diff-removed" style="padding: 1px 3px">red background</span>
+          </li>
+          <li>
+            Changed attributes get
+            <span class="diff-attr-changed" style="padding: 1px 3px">blue outline</span>
+          </li>
+          <li>The statistics panel shows detailed change metrics</li>
+        </ul>
+      </div>
+    </div>
+
+    <script type="module">
+      import {
+        getCustomDiffStats,
+        formatTagStatsSummary,
+        getChangedTagsList,
+      } from '../dist/index.js';
+
+      const oldContentEl = document.getElementById('old-content');
+      const newContentEl = document.getElementById('new-content');
+      const oldRenderEl = document.getElementById('old-render');
+      const newRenderEl = document.getElementById('new-render');
+      const statsGridEl = document.getElementById('stats-grid');
+
+      function updateStatsDisplay(stats) {
+        statsGridEl.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Changed Tags</div>
+                    <div class="stat-value blue-600">${stats.totalChangedTags}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Added Tags</div>
+                    <div class="stat-value green-600">${stats.totalAddedTags}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Removed Tags</div>
+                    <div class="stat-value red-600">${stats.totalRemovedTags}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Text Changes</div>
+                    <div style="font-size: 14px; color: #64748b;">
+                        <span class="green-600">+${stats.totalAddedTexts}</span> / 
+                        <span class="red-600">-${stats.totalRemovedTexts}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Words Added</div>
+                    <div class="stat-value green-600">${stats.totalAddedWords}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Words Removed</div>
+                    <div class="stat-value red-600">${stats.totalRemovedWords}</div>
+                </div>
+            `;
+
+        // Add detailed breakdown if available
+        const detailsHtml = [];
+
+        if (stats.addedTags && Object.keys(stats.addedTags).length > 0) {
+          const addedList = Object.entries(stats.addedTags)
+            .map(([tag, count]) => `+${count} &lt;${tag}&gt;`)
+            .join(', ');
+          detailsHtml.push(
+            `<div class="stat-card" style="grid-column: span 2;"><div class="stat-label">Added Elements</div><div style="color: #16a34a; font-size: 14px;">${addedList}</div></div>`
+          );
+        }
+
+        if (stats.removedTags && Object.keys(stats.removedTags).length > 0) {
+          const removedList = Object.entries(stats.removedTags)
+            .map(([tag, count]) => `-${count} &lt;${tag}&gt;`)
+            .join(', ');
+          detailsHtml.push(
+            `<div class="stat-card" style="grid-column: span 2;"><div class="stat-label">Removed Elements</div><div style="color: #dc2626; font-size: 14px;">${removedList}</div></div>`
+          );
+        }
+
+        if (stats.changedTags && Object.keys(stats.changedTags).length > 0) {
+          const changedList = Object.entries(stats.changedTags)
+            .map(
+              ([tag, info]) =>
+                `~${info.count} &lt;${tag}&gt; (${info.changedAttributes.join(', ')})`
+            )
+            .join(', ');
+          detailsHtml.push(
+            `<div class="stat-card" style="grid-column: span 3;"><div class="stat-label">Changed Elements</div><div style="color: #2563eb; font-size: 14px;">${changedList}</div></div>`
+          );
+        }
+
+        if (detailsHtml.length > 0) {
+          statsGridEl.innerHTML += detailsHtml.join('');
+        }
+      }
+
+      function performDiff() {
+        try {
+          const oldContent = oldContentEl.value.trim();
+          const newContent = newContentEl.value.trim();
+
+          if (!oldContent || !newContent) {
+            oldRenderEl.innerHTML =
+              '<p style="color: #64748b;">Please enter content in both textareas</p>';
+            newRenderEl.innerHTML =
+              '<p style="color: #64748b;">Please enter content in both textareas</p>';
+            return;
+          }
+
+          const { diffResult, stats } = getCustomDiffStats(oldContent, newContent, {
+            trackedTags: ['*'],
+            watchedTags: ['*'],
+            addedClass: 'diff-added',
+            removedClass: 'diff-removed',
+            attributeChangeClass: 'diff-attr-changed',
+            elementChangeClass: 'diff-element-changed',
+            wrapperTag: 'span',
+            textWrapperTag: 'span',
+            ignoreWhitespaceTexts: true,
+          });
+
+          // Clear and append diff results
+          oldRenderEl.innerHTML = '';
+          newRenderEl.innerHTML = '';
+
+          if (diffResult.rootElements[0]) {
+            oldRenderEl.appendChild(diffResult.rootElements[0].cloneNode(true));
+          }
+          if (diffResult.rootElements[1]) {
+            newRenderEl.appendChild(diffResult.rootElements[1].cloneNode(true));
+          }
+
+          // Update stats display
+          updateStatsDisplay(stats);
+
+          // Log detailed info to console
+          console.log('Diff Statistics:', stats);
+          console.log('Formatted Summary:', formatTagStatsSummary(stats));
+          console.log('Changed Tags List:', getChangedTagsList(stats));
+        } catch (error) {
+          console.error('Error performing diff:', error);
+          oldRenderEl.innerHTML = `<p style="color: #dc2626;">Error: ${error.message}</p>`;
+          newRenderEl.innerHTML = `<p style="color: #dc2626;">Error: ${error.message}</p>`;
+        }
+      }
+
+      // Initial diff
+      performDiff();
+
+      // Update on content change
+      oldContentEl.addEventListener('input', performDiff);
+      newContentEl.addEventListener('input', performDiff);
+
+      // Add some example buttons for quick testing
+      const examplesContainer = document.createElement('div');
+      examplesContainer.innerHTML = `
+            <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #d1d5db; margin-top: 16px;">
+                <h3 style="margin: 0 0 12px 0; color: #374151;">Quick Examples</h3>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="loadTextExample()" style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Text Changes</button>
+                    <button onclick="loadAttributeExample()" style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Attribute Changes</button>
+                    <button onclick="loadStructuralExample()" style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Structural Changes</button>
+                    <button onclick="loadComplexExample()" style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Complex Example</button>
+                </div>
+            </div>
+        `;
+      document.querySelector('.container').appendChild(examplesContainer);
+
+      // Example functions
+      window.loadTextExample = () => {
+        oldContentEl.value = '<p>This is the original text with some words.</p>';
+        newContentEl.value = '<p>This is the modified text with different words.</p>';
+        performDiff();
+      };
+
+      window.loadAttributeExample = () => {
+        oldContentEl.value = '<img src="old.jpg" alt="Old image" width="100" />';
+        newContentEl.value = '<img src="new.jpg" alt="New image" width="200" height="150" />';
+        performDiff();
+      };
+
+      window.loadStructuralExample = () => {
+        oldContentEl.value = '<div><p>Content</p></div>';
+        newContentEl.value = '<div><p>Content</p><span>New element</span></div>';
+        performDiff();
+      };
+
+      window.loadComplexExample = () => {
+        oldContentEl.value = `<article class="post">
+  <h1>Old Title</h1>
+  <p>Original content here.</p>
+  <img src="old.jpg" alt="Old" />
+</article>`;
+        newContentEl.value = `<article class="post featured">
+  <h1>Updated Title</h1>
+  <p>Modified content here with more details.</p>
+  <img src="new.jpg" alt="Updated" width="300" />
+  <div class="tags">
+    <span>New</span>
+    <span>Updated</span>
+  </div>
+</article>`;
+        performDiff();
+      };
+    </script>
+  </body>
+</html>

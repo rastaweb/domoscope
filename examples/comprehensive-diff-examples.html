@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Domoscope - Comprehensive Diff Examples</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+
+      .example {
+        margin-bottom: 40px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        background-color: #f9f9f9;
+      }
+
+      .example h2 {
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+      }
+
+      .diff-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .version {
+        padding: 15px;
+        border-radius: 6px;
+        background-color: white;
+        border: 1px solid #ccc;
+      }
+
+      .version h3 {
+        margin-top: 0;
+        color: #555;
+      }
+
+      .stats {
+        background-color: #e9ecef;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 20px;
+        font-family: monospace;
+        white-space: pre-line;
+      }
+
+      /* Diff styling */
+      .diff-added {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 2px 4px;
+        border-radius: 3px;
+        border-left: 3px solid #28a745;
+      }
+
+      .highlight-added {
+        background-color: #28a745;
+        color: white;
+        font-weight: bold;
+        padding: 1px 3px;
+        border-radius: 2px;
+      }
+
+      .diff-removed {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 2px 4px;
+        border-radius: 3px;
+        border-left: 3px solid #dc3545;
+        text-decoration: line-through;
+      }
+
+      .highlight-removed {
+        background-color: #dc3545;
+        color: white;
+        font-weight: bold;
+        padding: 1px 3px;
+        border-radius: 2px;
+        text-decoration: line-through;
+      }
+
+      .diff-changed {
+        border: 2px dashed #ffc107;
+        padding: 4px;
+        border-radius: 4px;
+        background-color: #fff3cd;
+      }
+
+      .diff-attr-changed {
+        outline: 2px dotted #17a2b8;
+        outline-offset: 2px;
+        background-color: #d1ecf1;
+      }
+
+      .word-added {
+        background-color: #90ee90;
+        font-weight: bold;
+      }
+
+      .word-removed {
+        background-color: #ffb6c1;
+        text-decoration: line-through;
+      }
+
+      .element-modified {
+        box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+      }
+
+      .attr-changed {
+        border-bottom: 2px wavy #007bff;
+      }
+
+      .code-block {
+        background-color: #f4f4f4;
+        padding: 15px;
+        border-radius: 4px;
+        border-left: 4px solid #007bff;
+        font-family: 'Courier New', monospace;
+        margin: 10px 0;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 Domoscope - Comprehensive Diff Examples</h1>
+    <p>This page demonstrates various types of changes that Domoscope can detect and visualize.</p>
+
+    <div id="example1" class="example">
+      <h2>Example 1: Added and Removed Tags</h2>
+      <p>Shows detection of newly added elements and removed elements.</p>
+      <div class="diff-container">
+        <div class="version">
+          <h3>Original Version</h3>
+          <div id="old1"></div>
+        </div>
+        <div class="version">
+          <h3>Modified Version</h3>
+          <div id="new1"></div>
+        </div>
+      </div>
+      <div id="stats1" class="stats"></div>
+    </div>
+
+    <div id="example2" class="example">
+      <h2>Example 2: Text and Word-Level Changes</h2>
+      <p>Demonstrates word-level diffing within text content.</p>
+      <div class="diff-container">
+        <div class="version">
+          <h3>Original Version</h3>
+          <div id="old2"></div>
+        </div>
+        <div class="version">
+          <h3>Modified Version</h3>
+          <div id="new2"></div>
+        </div>
+      </div>
+      <div id="stats2" class="stats"></div>
+    </div>
+
+    <div id="example3" class="example">
+      <h2>Example 3: Attribute Changes</h2>
+      <p>Shows detection of changed element attributes.</p>
+      <div class="diff-container">
+        <div class="version">
+          <h3>Original Version</h3>
+          <div id="old3"></div>
+        </div>
+        <div class="version">
+          <h3>Modified Version</h3>
+          <div id="new3"></div>
+        </div>
+      </div>
+      <div id="stats3" class="stats"></div>
+    </div>
+
+    <div id="example4" class="example">
+      <h2>Example 4: Complex Mixed Changes</h2>
+      <p>Comprehensive example showing multiple types of changes.</p>
+      <div class="diff-container">
+        <div class="version">
+          <h3>Original Version</h3>
+          <div id="old4"></div>
+        </div>
+        <div class="version">
+          <h3>Modified Version</h3>
+          <div id="new4"></div>
+        </div>
+      </div>
+      <div id="stats4" class="stats"></div>
+    </div>
+
+    <script type="module">
+      // Import Domoscope (adjust path as needed)
+      import {
+        getCustomDiffStats,
+        formatTagStatsSummary,
+        getChangedTagsList,
+        ConfigBuilder,
+      } from '../dist/index.js';
+
+      // Example 1: Added and Removed Tags
+      function runExample1() {
+        const oldHTML = `
+                <div class="content">
+                    <h1>Article Title</h1>
+                    <p>Original paragraph content.</p>
+                    <ul>
+                        <li>Item 1</li>
+                        <li>Item 2</li>
+                    </ul>
+                </div>
+            `;
+
+        const newHTML = `
+                <div class="content">
+                    <h1>Article Title</h1>
+                    <p>Modified paragraph content with more details.</p>
+                    <blockquote>This is a new quote that was added.</blockquote>
+                    <ul>
+                        <li>Item 1</li>
+                        <li>Item 2</li>
+                        <li>Item 3</li>
+                    </ul>
+                    <img src="diagram.png" alt="New diagram" />
+                </div>
+            `;
+
+        const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML, {
+          addedClass: 'highlight-added',
+          removedClass: 'highlight-removed',
+          watchedTags: ['blockquote', 'img', 'li'],
+        });
+
+        document.getElementById('old1').appendChild(diffResult.rootElements[0]);
+        document.getElementById('new1').appendChild(diffResult.rootElements[1]);
+        document.getElementById('stats1').textContent = formatTagStatsSummary(stats);
+      }
+
+      // Example 2: Text and Word-Level Changes
+      function runExample2() {
+        const oldHTML = `
+                <article>
+                    <h2>Product Review</h2>
+                    <p>This product is good and works well for basic needs.</p>
+                    <p>The price is reasonable at $50.</p>
+                </article>
+            `;
+
+        const newHTML = `
+                <article>
+                    <h2>Product Review</h2>
+                    <p>This product is excellent and works perfectly for advanced needs.</p>
+                    <p>The price is very reasonable at $45 with discount.</p>
+                </article>
+            `;
+
+        const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML, {
+          addedClass: 'word-added',
+          removedClass: 'word-removed',
+          wrapperTag: 'mark',
+        });
+
+        document.getElementById('old2').appendChild(diffResult.rootElements[0]);
+        document.getElementById('new2').appendChild(diffResult.rootElements[1]);
+
+        const statsText = `Changed words: +${stats.totalAddedWords} -${stats.totalRemovedWords}
+Text nodes modified: ${stats.totalChangedTags}
+
+${formatTagStatsSummary(stats)}`;
+        document.getElementById('stats2').textContent = statsText;
+      }
+
+      // Example 3: Attribute Changes
+      function runExample3() {
+        const oldHTML = `
+                <div class="container">
+                    <img src="old-image.jpg" alt="Old description" width="300" />
+                    <a href="/old-link" title="Old title">Click here</a>
+                    <button type="button" disabled>Submit</button>
+                </div>
+            `;
+
+        const newHTML = `
+                <div class="container updated">
+                    <img src="new-image.jpg" alt="Updated description" width="400" height="300" />
+                    <a href="/new-link" title="Updated title" target="_blank">Click here</a>
+                    <button type="submit">Submit</button>
+                </div>
+            `;
+
+        const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML, {
+          attributeChangeClass: 'attr-changed',
+          elementChangeClass: 'element-modified',
+          trackedTags: {
+            img: ['src', 'alt', 'width', 'height'],
+            a: ['href', 'title', 'target'],
+            button: ['type', 'disabled'],
+            div: ['class'],
+          },
+        });
+
+        document.getElementById('old3').appendChild(diffResult.rootElements[0]);
+        document.getElementById('new3').appendChild(diffResult.rootElements[1]);
+
+        const changes = getChangedTagsList(stats);
+        let statsText = 'Attribute Changes:\n';
+        changes.forEach(({ tagName, count, changedAttributes }) => {
+          statsText += `${tagName}: ${count} elements changed\n`;
+          statsText += `  Attributes: ${changedAttributes.join(', ')}\n`;
+        });
+
+        document.getElementById('stats3').textContent = statsText;
+      }
+
+      // Example 4: Complex Mixed Changes
+      function runExample4() {
+        const oldHTML = `
+                <section class="blog-post">
+                    <header>
+                        <h1>How to Use APIs</h1>
+                        <p class="meta">Published on 2024-01-15</p>
+                    </header>
+                    <main>
+                        <p>APIs are powerful tools for developers.</p>
+                        <code>fetch('/api/data')</code>
+                        <p>They allow seamless data exchange.</p>
+                    </main>
+                </section>
+            `;
+
+        const newHTML = `
+                <section class="blog-post featured">
+                    <header>
+                        <h1>How to Use REST APIs</h1>
+                        <p class="meta updated">Published on 2024-01-15, Updated on 2024-10-21</p>
+                        <div class="tags">
+                            <span class="tag">API</span>
+                            <span class="tag">Tutorial</span>
+                        </div>
+                    </header>
+                    <main>
+                        <p>REST APIs are powerful tools for modern developers.</p>
+                        <pre><code>fetch('/api/v2/data')</code></pre>
+                        <p>They allow seamless and efficient data exchange.</p>
+                        <p>Here's an example of error handling:</p>
+                        <code>try { ... } catch (error) { ... }</code>
+                    </main>
+                </section>
+            `;
+
+        const config = new ConfigBuilder()
+          .withStyles({
+            addedClass: 'diff-added',
+            removedClass: 'diff-removed',
+            elementChangeClass: 'diff-changed',
+            attributeChangeClass: 'diff-attr-changed',
+          })
+          .trackTags(['section', 'h1', 'p', 'code', 'pre', 'div', 'span'])
+          .trackAttributes('class')
+          .watchTags('div', 'span', 'pre')
+          .build();
+
+        const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML, config);
+
+        document.getElementById('old4').appendChild(diffResult.rootElements[0]);
+        document.getElementById('new4').appendChild(diffResult.rootElements[1]);
+
+        let statsText = '=== CHANGE SUMMARY ===\n';
+        statsText += `Total elements changed: ${stats.totalChangedTags}\n`;
+        statsText += `Elements added: ${stats.totalAddedTags}\n`;
+        statsText += `Words added: ${stats.totalAddedWords}\n`;
+        statsText += `Words removed: ${stats.totalRemovedWords}\n`;
+
+        if (stats.addedTags) {
+          statsText += '\n=== ADDED ELEMENTS ===\n';
+          Object.entries(stats.addedTags).forEach(([tag, count]) => {
+            statsText += `+${count} ${tag} element(s)\n`;
+          });
+        }
+
+        if (stats.changedTags) {
+          statsText += '\n=== CHANGED ELEMENTS ===\n';
+          Object.entries(stats.changedTags).forEach(([tag, data]) => {
+            statsText += `~${data.count} ${tag} element(s) modified\n`;
+            if (data.changedAttributes.length > 0) {
+              statsText += `  Attributes: ${data.changedAttributes.join(', ')}\n`;
+            }
+          });
+        }
+
+        document.getElementById('stats4').textContent = statsText;
+      }
+
+      // Run all examples when page loads
+      document.addEventListener('DOMContentLoaded', () => {
+        try {
+          runExample1();
+          runExample2();
+          runExample3();
+          runExample4();
+        } catch (error) {
+          console.error('Error running examples:', error);
+          document.body.innerHTML +=
+            '<div style="color: red; padding: 20px; background: #ffe6e6; border-radius: 8px; margin: 20px 0;"><strong>Error:</strong> Make sure to build the project first with <code>npm run build</code> and that the dist/ folder exists.</div>';
+        }
+      });
+    </script>
+  </body>
+</html>

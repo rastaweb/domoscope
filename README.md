@@ -2308,11 +2308,12 @@ cd domoscope
 # Build the library
 npm run build
 
-# Start local server
-python3 -m http.server 8000
+# Start local server (recommended)
+# from project root, run the included npm helper which serves the project on port 8000
+npm run playground
 
 # Open playground
-open http://localhost:8000/playground.html
+open http://localhost:8000/playground/react-playground.html
 ```
 
 ### Playground Features

@@ -1,0 +1,296 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Domoscope React Playground</title>
+    <!-- Tailwind for quick styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- React & ReactDOM (UMD builds) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel standalone to compile JSX + TypeScript in-browser (development only) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      body {
+        background: #f8fafc;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="p-6 max-w-6xl mx-auto"></div>
+
+    <!-- Load local library as an ES module and attach to window for the in-browser Babel script to use -->
+    <script type="module">
+      import * as Domoscope from '../dist/index.js';
+      window.DomoScopeLib = Domoscope;
+    </script>
+
+    <!-- Playground app (JSX + TypeScript stripped by Babel) -->
+    <script type="text/babel" data-presets="react,typescript">
+      const { getCustomDiffStats } = window.DomoScopeLib;
+
+      // StatsDisplay and App adapted to run in the browser; TypeScript types are stripped by Babel
+      const StatsDisplay = ({ stats }) => {
+        if (!stats) return null;
+        return (
+          <div className="bg-slate-100 p-4 rounded-lg">
+            <h2 className="text-xl font-bold mb-4 text-slate-800">Diff Statistics</h2>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white p-3 rounded shadow">
+                <div className="text-sm text-slate-600">Changed Tags</div>
+                <div className="text-2xl font-bold text-blue-600">{stats.totalChangedTags}</div>
+              </div>
+              <div className="bg-white p-3 rounded shadow">
+                <div className="text-sm text-slate-600">Added Tags</div>
+                <div className="text-2xl font-bold text-green-600">{stats.totalAddedTags}</div>
+              </div>
+              <div className="bg-white p-3 rounded shadow">
+                <div className="text-sm text-slate-600">Removed Tags</div>
+                <div className="text-2xl font-bold text-red-600">{stats.totalRemovedTags}</div>
+              </div>
+              <div className="bg-white p-3 rounded shadow">
+                <div className="text-sm text-slate-600">Text Changes</div>
+                <div className="text-xs text-slate-500">
+                  <span className="text-green-600">+{stats.totalAddedTexts}</span> /
+                  <span className="text-red-600 ml-1">-{stats.totalRemovedTexts}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-white p-3 rounded shadow">
+                <div className="text-sm text-slate-600">Words Added</div>
+                <div className="text-lg font-bold text-green-600">{stats.totalAddedWords}</div>
+              </div>
+              <div className="bg-white p-3 rounded shadow">
+                <div className="text-sm text-slate-600">Words Removed</div>
+                <div className="text-lg font-bold text-red-600">{stats.totalRemovedWords}</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {stats.addedTags && Object.keys(stats.addedTags).length > 0 && (
+                <div className="bg-white p-3 rounded shadow">
+                  <h3 className="font-semibold text-green-700 mb-2">Added Tags</h3>
+                  <div className="space-y-1">
+                    {Object.entries(stats.addedTags).map(([tag, count]) => (
+                      <div key={tag} className="flex justify-between text-sm">
+                        <span className="font-mono text-green-600">&lt;{tag}&gt;</span>
+                        <span className="font-bold">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {stats.removedTags && Object.keys(stats.removedTags).length > 0 && (
+                <div className="bg-white p-3 rounded shadow">
+                  <h3 className="font-semibold text-red-700 mb-2">Removed Tags</h3>
+                  <div className="space-y-1">
+                    {Object.entries(stats.removedTags).map(([tag, count]) => (
+                      <div key={tag} className="flex justify-between text-sm">
+                        <span className="font-mono text-red-600">&lt;{tag}&gt;</span>
+                        <span className="font-bold">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {stats.changedTags && Object.keys(stats.changedTags).length > 0 && (
+                <div className="bg-white p-3 rounded shadow">
+                  <h3 className="font-semibold text-blue-700 mb-2">Changed Tags</h3>
+                  <div className="space-y-2">
+                    {Object.entries(stats.changedTags).map(([tag, info]) => (
+                      <div key={tag} className="text-sm">
+                        <div className="flex justify-between">
+                          <span className="font-mono text-blue-600">&lt;{tag}&gt;</span>
+                          <span className="font-bold">{info.count}</span>
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1">
+                          {info.changedAttributes.join(', ')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      };
+
+      const App = () => {
+        const [oldContent, setOldContent] = React.useState(
+          `<h1>man title hastam</h1>
+<p>lorem ipsum oblador amet dide.</p>
+<p>man paragraph 2 hastam.
+  <span>manam span hastam</span>
+</p>
+<img src="/public/favicon.ico"/>`
+        );
+
+        const [newContent, setNewContent] = React.useState(
+          `<h1>man updated title hastam</h1>
+<p>lorem ipsum oblador amet dide with more content.</p>
+<p>man paragraph 2 hastam.
+  <span class="highlight">manam span hastam</span>
+</p>
+<div>new added div element</div>`
+        );
+
+        const oldRenderWrapper = React.useRef(null);
+        const newRenderWrapper = React.useRef(null);
+
+        // Generate diff result
+        const { diffResult, stats } = React.useMemo(() => {
+          try {
+            return getCustomDiffStats(oldContent, newContent, {
+              watchedTags: ['*'],
+              addedClass: 'diff-added',
+              removedClass: 'diff-removed',
+              attributeChangeClass: 'diff-attr-changed',
+              elementChangeClass: 'diff-element-changed',
+              wrapperTag: 'span',
+              textWrapperTag: 'span',
+              ignoreWhitespaceTexts: true,
+            });
+          } catch (err) {
+            console.error('Diff error', err);
+            return {
+              diffResult: {
+                oldRootElements: [],
+                newRootElements: [],
+                rootElements: [],
+                allElements: [],
+              },
+              stats: null,
+            };
+          }
+        }, [oldContent, newContent]);
+
+        const oldElements = diffResult.oldRootElements || [];
+        const newElements = diffResult.newRootElements || [];
+
+        // Render left
+        React.useEffect(() => {
+          if (oldRenderWrapper.current) {
+            oldRenderWrapper.current.innerHTML = '';
+            oldElements.forEach((el) => {
+              oldRenderWrapper.current.appendChild(el.cloneNode(true));
+            });
+            oldRenderWrapper.current
+              .querySelectorAll('.diff-added')
+              .forEach((el) => (el.style.display = 'none'));
+            oldRenderWrapper.current
+              .querySelectorAll('.diff-attr-changed')
+              .forEach((el) => el.classList.remove('diff-attr-changed'));
+            oldRenderWrapper.current
+              .querySelectorAll('.diff-element-changed')
+              .forEach((el) => el.classList.remove('diff-element-changed'));
+          }
+        }, [oldElements]);
+
+        // Render right
+        React.useEffect(() => {
+          if (newRenderWrapper.current) {
+            newRenderWrapper.current.innerHTML = '';
+            newElements.forEach((el) => {
+              newRenderWrapper.current.appendChild(el.cloneNode(true));
+            });
+            newRenderWrapper.current
+              .querySelectorAll('.diff-removed')
+              .forEach((el) => (el.style.display = 'none'));
+          }
+        }, [newElements]);
+
+        return (
+          <div className="flex flex-col p-2 gap-5">
+            <StatsDisplay
+              stats={
+                stats || {
+                  totalChangedTags: 0,
+                  totalAddedTexts: 0,
+                  totalRemovedTexts: 0,
+                  totalAddedTags: 0,
+                  totalRemovedTags: 0,
+                  totalAddedWords: 0,
+                  totalRemovedWords: 0,
+                }
+              }
+            />
+
+            <div className="flex gap-2">
+              <div className="flex flex-col w-1/2 gap-2">
+                <h1 className="bg-slate-700 text-white p-3 rounded">OLD CONTENT</h1>
+                <textarea
+                  className="border border-slate-600 rounded w-full p-2 font-mono text-sm"
+                  rows={12}
+                  value={oldContent}
+                  onChange={(e) => setOldContent(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col w-1/2 gap-2">
+                <h1 className="bg-slate-700 text-white p-3 rounded">NEW CONTENT</h1>
+                <textarea
+                  className="border border-slate-600 rounded w-full p-2 font-mono text-sm"
+                  rows={12}
+                  value={newContent}
+                  onChange={(e) => setNewContent(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <div className="flex flex-col w-1/2 gap-2">
+                <h1 className="bg-red-600 text-white p-3 rounded flex items-center">
+                  <span className="mr-2">🔴</span>OLD CONTENT (Only Removed Highlights)
+                </h1>
+                <div
+                  ref={oldRenderWrapper}
+                  className="border border-slate-600 w-full rounded p-4 min-h-[200px] bg-white"
+                ></div>
+              </div>
+              <div className="flex flex-col w-1/2 gap-2">
+                <h1 className="bg-green-600 text-white p-3 rounded flex items-center">
+                  <span className="mr-2">🟢</span>NEW CONTENT (Added & Changed)
+                </h1>
+                <div
+                  ref={newRenderWrapper}
+                  className="border border-slate-600 w-full rounded p-4 min-h-[200px] bg-white"
+                ></div>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg border border-slate-300 mt-4">
+              <h3 className="font-bold text-slate-800 mb-3">Diff Legend</h3>
+              <div className="flex gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="diff-added px-2 py-1 text-sm">Added Content</span>
+                  <span className="text-sm text-slate-600">Green</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="diff-removed px-2 py-1 text-sm">Removed Content</span>
+                  <span className="text-sm text-slate-600">Red</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="diff-attr-changed px-2 py-1 text-sm border">
+                    Changed Attributes
+                  </span>
+                  <span className="text-sm text-slate-600">Blue</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+</html>

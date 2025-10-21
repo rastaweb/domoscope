@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Domoscope - Two-Sided Diff Demo</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+        background-color: #f8fafc;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .editor-section {
+        display: flex;
+        gap: 16px;
+      }
+
+      .editor-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .section-header {
+        padding: 12px;
+        border-radius: 6px;
+        font-weight: bold;
+        color: white;
+        display: flex;
+        align-items: center;
+      }
+
+      .old-header {
+        background-color: #dc2626;
+      }
+
+      .new-header {
+        background-color: #16a34a;
+      }
+
+      .neutral-header {
+        background-color: #374151;
+      }
+
+      textarea {
+        border: 1px solid #9ca3af;
+        border-radius: 6px;
+        padding: 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 200px;
+      }
+
+      .render-area {
+        border: 1px solid #9ca3af;
+        border-radius: 6px;
+        padding: 16px;
+        min-height: 200px;
+        background-color: white;
+      }
+
+      .stats-panel {
+        background-color: #f1f5f9;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .stat-card {
+        background-color: white;
+        padding: 12px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 4px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      /* DIFF STYLING - Two-sided approach */
+
+      /* Only for left side: Removed content with red background */
+      .diff-removed {
+        background-color: #dc2626 !important;
+        color: white !important;
+        padding: 2px 4px;
+        border-radius: 3px;
+        text-decoration: line-through;
+        font-weight: 500;
+      }
+
+      /* Only for right side: Added content with green background */
+      .diff-added {
+        background-color: #16a34a !important;
+        color: white !important;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-weight: 500;
+      }
+
+      /* Only for right side: Changed attributes with blue outline */
+      .diff-attr-changed {
+        outline: 2px solid #2563eb !important;
+        outline-offset: 1px;
+        border-radius: 2px;
+      }
+
+      /* Only for right side: Changed elements */
+      .diff-element-changed {
+        border: 1px dashed #f59e0b;
+        padding: 2px;
+        border-radius: 3px;
+        background-color: rgba(245, 158, 11, 0.1);
+      }
+
+      /* Ensure text visibility */
+      .diff-removed *,
+      .diff-removed span {
+        color: white !important;
+      }
+
+      .diff-added *,
+      .diff-added span {
+        color: white !important;
+      }
+
+      .legend {
+        background-color: white;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        margin-top: 16px;
+      }
+
+      .legend-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .legend-example {
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 14px;
+      }
+
+      .instructions {
+        background-color: #dbeafe;
+        border: 1px solid #93c5fd;
+        border-radius: 8px;
+        padding: 16px;
+        color: #1e40af;
+      }
+
+      .blue-600 {
+        color: #2563eb;
+      }
+      .green-600 {
+        color: #16a34a;
+      }
+      .red-600 {
+        color: #dc2626;
+      }
+      .yellow-600 {
+        color: #ca8a04;
+      }
+
+      .side-description {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #475569;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 style="text-align: center; color: #374151; margin-bottom: 30px">
+        🔍 Domoscope - Two-Sided Diff Demo
+      </h1>
+
+      <div
+        style="
+          background: #e0f2fe;
+          border: 1px solid #0277bd;
+          border-radius: 8px;
+          padding: 16px;
+          margin-bottom: 20px;
+        "
+      >
+        <h3 style="margin: 0 0 8px 0; color: #01579b">Two-Sided Diff Approach</h3>
+        <p style="margin: 0; color: #0277bd; font-size: 14px">
+          <strong>Left side:</strong> Shows OLD content with only removed highlights (red) •
+          <strong>Right side:</strong> Shows NEW content with added (green) and changed attributes
+          (blue), but no removed content
+        </p>
+      </div>
+
+      <!-- Stats Panel -->
+      <div id="stats-panel" class="stats-panel">
+        <h2 style="margin: 0 0 16px 0; color: #374151">Diff Statistics</h2>
+        <div class="stats-grid" id="stats-grid">
+          <!-- Stats will be populated here -->
+        </div>
+      </div>
+
+      <!-- Editor Section -->
+      <div class="editor-section">
+        <div class="editor-column">
+          <div class="section-header neutral-header">OLD CONTENT</div>
+          <textarea id="old-content" placeholder="Enter old HTML content...">
+<h1>man title hastam</h1>
+<p>lorem ipsum oblador amet dide.</p>
+<p>man paragraph 2 hastam 
+  <span>manam span hastam</span>
+</p>
+<div class="old-class">this will be removed</div></textarea
+          >
+        </div>
+        <div class="editor-column">
+          <div class="section-header neutral-header">NEW CONTENT</div>
+          <textarea id="new-content" placeholder="Enter new HTML content...">
+<h1>man updated title hastam</h1>
+<p>lorem ipsum oblador amet dide with more content.</p>
+<p>man paragraph 2 hastam 
+  <span class="highlight">manam span hastam</span>
+</p>
+<div>new added div element</div>
+<img src="new-image.jpg" alt="New image" /></textarea
+          >
+        </div>
+      </div>
+
+      <!-- Render Section -->
+      <div class="editor-section">
+        <div class="editor-column">
+          <div class="side-description">
+            <strong>Left Side Behavior:</strong> Shows the original content with removed parts
+            highlighted in red. Added content and attribute changes are not shown here.
+          </div>
+          <div class="section-header old-header">🔴 OLD CONTENT (Only Removed Highlights)</div>
+          <div id="old-render" class="render-area"></div>
+        </div>
+        <div class="editor-column">
+          <div class="side-description">
+            <strong>Right Side Behavior:</strong> Shows the new content with added parts in green
+            and changed attributes with blue outline. Removed content is hidden completely.
+          </div>
+          <div class="section-header new-header">🟢 NEW CONTENT (Added & Changed, No Removed)</div>
+          <div id="new-render" class="render-area"></div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend">
+        <h3 style="margin: 0 0 12px 0; color: #374151">Two-Sided Diff Legend</h3>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="legend-example diff-removed">Removed Content</span>
+            <span style="color: #64748b; font-size: 14px">Left side only - Red background</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-example diff-added">Added Content</span>
+            <span style="color: #64748b; font-size: 14px">Right side only - Green background</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-example diff-attr-changed" style="border: 1px solid #d1d5db"
+              >Changed Attributes</span
+            >
+            <span style="color: #64748b; font-size: 14px">Right side only - Blue outline</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-example diff-element-changed">Modified Elements</span>
+            <span style="color: #64748b; font-size: 14px"
+              >Right side only - Orange dashed border</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <h3 style="margin: 0 0 8px 0">How This Two-Sided Approach Works</h3>
+        <ul style="margin: 0; padding-left: 16px">
+          <li>
+            <strong>Left Side:</strong> Uses original content as base, highlights only removed parts
+            in <span class="diff-removed" style="padding: 1px 3px">red</span>
+          </li>
+          <li>
+            <strong>Right Side:</strong> Uses new content as base, highlights added parts in
+            <span class="diff-added" style="padding: 1px 3px">green</span> and changed attributes
+            with <span class="diff-attr-changed" style="padding: 1px 3px">blue outline</span>
+          </li>
+          <li><strong>Removed content is completely hidden</strong> from the right side</li>
+          <li><strong>Added content and changes are not shown</strong> on the left side</li>
+          <li>This gives you a clean before/after view with clear visual separation</li>
+        </ul>
+      </div>
+    </div>
+
+    <script type="module">
+      import { getCustomDiffStats, formatTagStatsSummary } from '../dist/index.js';
+
+      const oldContentEl = document.getElementById('old-content');
+      const newContentEl = document.getElementById('new-content');
+      const oldRenderEl = document.getElementById('old-render');
+      const newRenderEl = document.getElementById('new-render');
+      const statsGridEl = document.getElementById('stats-grid');
+
+      function updateStatsDisplay(stats) {
+        statsGridEl.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Changed Tags</div>
+                    <div class="stat-value blue-600">${stats.totalChangedTags}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Added Tags</div>
+                    <div class="stat-value green-600">${stats.totalAddedTags}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Removed Tags</div>
+                    <div class="stat-value red-600">${stats.totalRemovedTags}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Text Changes</div>
+                    <div style="font-size: 14px; color: #64748b;">
+                        <span class="green-600">+${stats.totalAddedTexts}</span> / 
+                        <span class="red-600">-${stats.totalRemovedTexts}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Words Added</div>
+                    <div class="stat-value green-600">${stats.totalAddedWords}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Words Removed</div>
+                    <div class="stat-value red-600">${stats.totalRemovedWords}</div>
+                </div>
+            `;
+
+        // Add detailed breakdown
+        const detailsHtml = [];
+
+        if (stats.addedTags && Object.keys(stats.addedTags).length > 0) {
+          const addedList = Object.entries(stats.addedTags)
+            .map(([tag, count]) => `+${count} &lt;${tag}&gt;`)
+            .join(', ');
+          detailsHtml.push(
+            `<div class="stat-card" style="grid-column: span 2;"><div class="stat-label">Added Elements (Right Side)</div><div style="color: #16a34a; font-size: 14px;">${addedList}</div></div>`
+          );
+        }
+
+        if (stats.removedTags && Object.keys(stats.removedTags).length > 0) {
+          const removedList = Object.entries(stats.removedTags)
+            .map(([tag, count]) => `-${count} &lt;${tag}&gt;`)
+            .join(', ');
+          detailsHtml.push(
+            `<div class="stat-card" style="grid-column: span 2;"><div class="stat-label">Removed Elements (Left Side)</div><div style="color: #dc2626; font-size: 14px;">${removedList}</div></div>`
+          );
+        }
+
+        if (stats.changedTags && Object.keys(stats.changedTags).length > 0) {
+          const changedList = Object.entries(stats.changedTags)
+            .map(
+              ([tag, info]) =>
+                `~${info.count} &lt;${tag}&gt; (${info.changedAttributes.join(', ')})`
+            )
+            .join(', ');
+          detailsHtml.push(
+            `<div class="stat-card" style="grid-column: span 3;"><div class="stat-label">Changed Elements (Right Side)</div><div style="color: #2563eb; font-size: 14px;">${changedList}</div></div>`
+          );
+        }
+
+        if (detailsHtml.length > 0) {
+          statsGridEl.innerHTML += detailsHtml.join('');
+        }
+      }
+
+      function performTwoSidedDiff() {
+        try {
+          const oldContent = oldContentEl.value.trim();
+          const newContent = newContentEl.value.trim();
+
+          if (!oldContent || !newContent) {
+            oldRenderEl.innerHTML =
+              '<p style="color: #64748b;">Please enter content in both textareas</p>';
+            newRenderEl.innerHTML =
+              '<p style="color: #64748b;">Please enter content in both textareas</p>';
+            return;
+          }
+
+          // LEFT SIDE: Only show REMOVED highlights (red) on old content
+          const leftResult = getCustomDiffStats(oldContent, newContent, {
+            trackedTags: ['*'],
+            watchedTags: ['*'],
+            addedClass: '', // Don't highlight added content on left
+            removedClass: 'diff-removed', // Only highlight removed content
+            attributeChangeClass: '', // Don't highlight attribute changes on left
+            elementChangeClass: '',
+            wrapperTag: 'span',
+            textWrapperTag: 'span',
+            ignoreWhitespaceTexts: true,
+          });
+
+          // RIGHT SIDE: Show ADDED and CHANGED content (no removed)
+          const rightResult = getCustomDiffStats(oldContent, newContent, {
+            trackedTags: ['*'],
+            watchedTags: ['*'],
+            addedClass: 'diff-added', // Highlight added content
+            removedClass: '', // Don't show removed content on right
+            attributeChangeClass: 'diff-attr-changed', // Highlight attribute changes
+            elementChangeClass: 'diff-element-changed',
+            wrapperTag: 'span',
+            textWrapperTag: 'span',
+            ignoreWhitespaceTexts: true,
+          });
+
+          // Clear and append diff results
+          oldRenderEl.innerHTML = '';
+          newRenderEl.innerHTML = '';
+
+          // Left side: old content with removed highlights
+          if (leftResult.diffResult.oldRootElements[0]) {
+            oldRenderEl.appendChild(leftResult.diffResult.oldRootElements[0].cloneNode(true));
+          }
+
+          // Right side: new content with added/changed highlights
+          if (rightResult.diffResult.newRootElements[0]) {
+            newRenderEl.appendChild(rightResult.diffResult.newRootElements[0].cloneNode(true));
+          }
+
+          // Update stats display (use stats from either result)
+          updateStatsDisplay(leftResult.stats);
+
+          console.log('Left side (removed only):', leftResult.stats);
+          console.log('Right side (added/changed):', rightResult.stats);
+        } catch (error) {
+          console.error('Error performing two-sided diff:', error);
+          oldRenderEl.innerHTML = `<p style="color: #dc2626;">Error: ${error.message}</p>`;
+          newRenderEl.innerHTML = `<p style="color: #dc2626;">Error: ${error.message}</p>`;
+        }
+      }
+
+      // Initial diff
+      performTwoSidedDiff();
+
+      // Update on content change
+      oldContentEl.addEventListener('input', performTwoSidedDiff);
+      newContentEl.addEventListener('input', performTwoSidedDiff);
+
+      // Add example buttons
+      const examplesContainer = document.createElement('div');
+      examplesContainer.innerHTML = `
+            <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #d1d5db; margin-top: 16px;">
+                <h3 style="margin: 0 0 12px 0; color: #374151;">Quick Examples for Two-Sided View</h3>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="loadTextChanges()" style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Text Changes</button>
+                    <button onclick="loadAttributeChanges()" style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Attribute Changes</button>
+                    <button onclick="loadAddRemove()" style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Add & Remove Elements</button>
+                    <button onclick="loadComplexChanges()" style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Complex Mixed Changes</button>
+                </div>
+            </div>
+        `;
+      document.querySelector('.container').appendChild(examplesContainer);
+
+      // Example functions
+      window.loadTextChanges = () => {
+        oldContentEl.value = '<p>This is the original text that will be modified.</p>';
+        newContentEl.value = '<p>This is the updated text that has been enhanced.</p>';
+        performTwoSidedDiff();
+      };
+
+      window.loadAttributeChanges = () => {
+        oldContentEl.value = '<img src="old.jpg" alt="Old image" width="100" class="old-class" />';
+        newContentEl.value =
+          '<img src="new.jpg" alt="Updated image" width="200" height="150" class="new-class" />';
+        performTwoSidedDiff();
+      };
+
+      window.loadAddRemove = () => {
+        oldContentEl.value = `<div>
+  <p>Keep this paragraph</p>
+  <span>This span will be removed</span>
+  <h2>Original heading</h2>
+</div>`;
+        newContentEl.value = `<div>
+  <p>Keep this paragraph</p>
+  <h2>Updated heading</h2>
+  <img src="new.jpg" alt="Added image" />
+  <div class="new-section">Completely new section</div>
+</div>`;
+        performTwoSidedDiff();
+      };
+
+      window.loadComplexChanges = () => {
+        oldContentEl.value = `<article class="post">
+  <h1>Original Title</h1>
+  <p>Some content that will change.</p>
+  <div class="old-section">
+    <span>Old content</span>
+    <img src="old.jpg" alt="Old" />
+  </div>
+  <footer>Original footer</footer>
+</article>`;
+        newContentEl.value = `<article class="post featured">
+  <h1>Updated Title</h1>
+  <p>Some content that has been modified with additional details.</p>
+  <div class="new-section updated">
+    <span class="highlight">New content</span>
+    <img src="new.jpg" alt="Updated" width="300" />
+    <p>Added paragraph</p>
+  </div>
+  <aside class="sidebar">New sidebar</aside>
+</article>`;
+        performTwoSidedDiff();
+      };
+    </script>
+  </body>
+</html>
