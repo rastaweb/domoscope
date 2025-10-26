@@ -578,8 +578,8 @@ export class StatsCollector {
         // Filter out anything that looks like an HTML tag or entity
         if (word.match(/^<.*>$/) || word.match(/^&[a-zA-Z0-9#]+;$/)) return false;
 
-        // Only count words that contain letters or numbers (exclude pure punctuation)
-        return word.match(/[a-zA-Z0-9]/);
+        // Only count words that contain letters or numbers (include Unicode letters for international text)
+        return word.match(/[\p{L}\p{N}]/u);
       });
 
     return words.length;
