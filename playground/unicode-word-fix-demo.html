@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Persian/Unicode Word Counting Fix Demo</title>
+    <script type="module" src="../dist/index.js"></script>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .demo-section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+      }
+      .text-box {
+        padding: 15px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: white;
+        font-family: 'Courier New', monospace;
+        direction: rtl; /* Right-to-left for Persian */
+      }
+      .stats-table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 15px 0;
+      }
+      .stats-table th,
+      .stats-table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+      }
+      .stats-table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+      .highlight-removed {
+        background-color: #ffebee;
+      }
+      .highlight-added {
+        background-color: #e8f5e8;
+      }
+      .warning {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+      }
+      .success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+      }
+      code {
+        background: #f8f9fa;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔧 Persian/Unicode Word Counting Fix Demo</h1>
+
+      <div class="success">
+        <h3>✅ Bug Fixed!</h3>
+        <p>
+          This demo shows the fix for Persian/Arabic word counting. Previously, Persian words were
+          not being counted in <code>totalRemovedWords</code> and <code>totalAddedWords</code> due
+          to a regex that only matched Latin characters.
+        </p>
+      </div>
+
+      <div class="demo-section">
+        <h2>📊 Text vs Words Explanation</h2>
+        <p><strong>totalAddedTexts</strong> = Number of DOM text nodes added</p>
+        <p><strong>totalAddedWords</strong> = Total count of words within those text nodes</p>
+
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Added Texts</th>
+              <th>Added Words</th>
+              <th>Explanation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Add "&lt;p&gt;Hello world&lt;/p&gt;"</td>
+              <td>1</td>
+              <td>2</td>
+              <td>1 paragraph element, 2 words</td>
+            </tr>
+            <tr>
+              <td>Add "&lt;span&gt;Hello&lt;/span&gt;&lt;span&gt;world&lt;/span&gt;"</td>
+              <td>2</td>
+              <td>2</td>
+              <td>2 separate elements, 1 word each</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="demo-section">
+        <h2>🇮🇷 Persian Word Removal Test</h2>
+        <p>This test demonstrates the fix for Persian word counting:</p>
+
+        <div class="text-box"><strong>Old:</strong> دکتر محمدرضا شاه محمدی متخصص</div>
+        <div class="text-box"><strong>New:</strong> دکتر محمدرضا شاه متخصص</div>
+
+        <p><strong>Expected:</strong> 1 removed word ("محمدی")</p>
+        <div id="persian-result"></div>
+      </div>
+
+      <div class="demo-section">
+        <h2>🌍 Multi-language Test</h2>
+        <p>Testing word counting across different languages:</p>
+        <div id="multilang-result"></div>
+      </div>
+
+      <div class="demo-section">
+        <h2>🔍 Your React App Content Test</h2>
+        <p>Testing the exact content from your React application:</p>
+        <div id="react-content-result"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { getCustomDiffStats } from '../dist/index.js';
+
+      // Test 1: Persian word removal
+      const persianOld = '<p>دکتر محمدرضا شاه محمدی متخصص</p>';
+      const persianNew = '<p>دکتر محمدرضا شاه متخصص</p>';
+
+      const persianResult = getCustomDiffStats(persianOld, persianNew, {
+        watchedTags: ['*'],
+      });
+
+      document.getElementById('persian-result').innerHTML = `
+            <table class="stats-table">
+                <tr><th>Metric</th><th>Value</th><th>Status</th></tr>
+                <tr><td>Total Removed Texts</td><td>${persianResult.stats.totalRemovedTexts}</td><td>✅</td></tr>
+                <tr><td>Total Removed Words</td><td>${persianResult.stats.totalRemovedWords}</td><td>${persianResult.stats.totalRemovedWords === 1 ? '✅ FIXED!' : '❌'}</td></tr>
+            </table>
+        `;
+
+      // Test 2: Multi-language test
+      const multiOld = '<div><p>Hello world</p><p>مرحبا بالعالم</p><p>你好世界</p></div>';
+      const multiNew = '<div><p>Hello</p><p>مرحبا</p><p>你好</p></div>';
+
+      const multiResult = getCustomDiffStats(multiOld, multiNew, {
+        watchedTags: ['*'],
+      });
+
+      document.getElementById('multilang-result').innerHTML = `
+            <div class="text-box">
+                <strong>Old:</strong> Hello world | مرحبا بالعالم | 你好世界<br>
+                <strong>New:</strong> Hello | مرحبا | 你好
+            </div>
+            <table class="stats-table">
+                <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
+                <tr><td>Total Removed Texts</td><td>${multiResult.stats.totalRemovedTexts}</td><td>3 text changes detected</td></tr>
+                <tr><td>Total Removed Words</td><td>${multiResult.stats.totalRemovedWords}</td><td>Should be 3 (world, بالعالم, 世界)</td></tr>
+            </table>
+        `;
+
+      // Test 3: Your React app content
+      const reactOld = `<p class="western">
+  راهنمای درمان درد سیاتیک با بررسی علائم سیاتیک طبق نظر دکتر محمدرضا شاه محمدی متخصص مغز و اعصاب، بهترین جراح دیسک کمر در تهران - عضو انجمن جراحان ستون فقرات اروپا [ Euro Spine ]
+</p>`;
+
+      const reactNew = `<p class="western">
+  راهنمای درمان درد سیاتیک با بررسی علائم سیاتیک طبق نظر دکتر محمدرضا شاه متخصص مغز و اعصاب، بهترین جراح دیسک کمر در تهران - عضو انجمن جراحان ستون فقرات اروپا [ Euro Spine ]
+</p>`;
+
+      const reactResult = getCustomDiffStats(reactOld, reactNew, {
+        watchedTags: ['*'],
+      });
+
+      document.getElementById('react-content-result').innerHTML = `
+            <div class="text-box">
+                <strong>Removed word:</strong> محمدی
+            </div>
+            <table class="stats-table">
+                <tr><th>Metric</th><th>Value</th><th>Status</th></tr>
+                <tr><td>Total Removed Texts</td><td>${reactResult.stats.totalRemovedTexts}</td><td>✅</td></tr>
+                <tr><td>Total Removed Words</td><td>${reactResult.stats.totalRemovedWords}</td><td>${reactResult.stats.totalRemovedWords === 1 ? '✅ NOW WORKING!' : '❌ Still broken'}</td></tr>
+                <tr><td>Total Added Texts</td><td>${reactResult.stats.totalAddedTexts}</td><td>-</td></tr>
+                <tr><td>Total Added Words</td><td>${reactResult.stats.totalAddedWords}</td><td>-</td></tr>
+            </table>
+            ${
+              reactResult.stats.totalRemovedWords === 1
+                ? '<div class="success">🎉 <strong>SUCCESS!</strong> Your React app will now correctly show 1 removed word for the Persian text change.</div>'
+                : '<div class="warning">⚠️ <strong>Issue persists.</strong> The word counting may still need adjustment.</div>'
+            }
+        `;
+    </script>
+  </body>
+</html>
