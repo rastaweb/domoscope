@@ -10,6 +10,7 @@ import {
   nodeKey,
   wrapElement,
   markDescendantTextNodes,
+  markDescendantElements,
   fragmentFromTokens,
   detectAndWrapElementChange,
   replaceTextNodeWithWrapped,
@@ -88,6 +89,16 @@ export class DiffEngine {
         }
       }
 
+      // Special case: If text content is identical, force matching regardless of threshold
+      if (bestMatch) {
+        const oldText = (bestMatch.textContent || '').trim();
+        const newText = (newElement.textContent || '').trim();
+        if (oldText && newText && oldText === newText) {
+          // Force matching for identical text content
+          dynamicThreshold = Math.min(dynamicThreshold, bestScore - 0.1);
+        }
+      }
+
       if (bestMatch && bestScore >= dynamicThreshold) {
         // Pair found - remove from pool and compare
         matchedOld.add(bestMatch);
@@ -118,6 +129,9 @@ export class DiffEngine {
 
     // ALWAYS set the data attribute for statistics tracking
     element.setAttribute('data-diff-added-tag', element.tagName.toLowerCase());
+
+    // NEW: Also mark all descendant elements for proper nested tracking
+    markDescendantElements(element, 'added');
 
     if (shouldWatch) {
       const wrapperTag = getWrapperTag('added', this.options);
@@ -160,6 +174,9 @@ export class DiffEngine {
 
     // ALWAYS set the data attribute for statistics tracking
     element.setAttribute('data-diff-removed-tag', element.tagName.toLowerCase());
+
+    // NEW: Also mark all descendant elements for proper nested tracking
+    markDescendantElements(element, 'removed');
 
     if (shouldWatch) {
       const wrapperTag = getWrapperTag('removed', this.options);
@@ -294,6 +311,14 @@ export class DiffEngine {
 
     // Post-process: Try to match similar unmatched text nodes
     this.matchSimilarTextNodes(unmatchedOldTextNodes, unmatchedNewTextNodes);
+
+    // Post-process: Try to match text nodes with formatted elements
+    this.matchTextWithFormattedElements(
+      unmatchedOldTextNodes,
+      unmatchedNewTextNodes,
+      newChildren,
+      oldChildren
+    );
   }
 
   /**
@@ -395,6 +420,84 @@ export class DiffEngine {
     // Replace original text nodes with fragments
     newText.parentNode?.replaceChild(newFragment, newText);
     oldText.parentNode?.replaceChild(oldFragment, oldText);
+  }
+
+  /**
+   * Try to match text nodes with formatted elements (handle formatting changes)
+   * This handles cases like: "text" -> "<strong><em>text</em></strong>"
+   */
+  private matchTextWithFormattedElements(
+    unmatchedOldTextNodes: { node: Text; index: number }[],
+    _unmatchedNewTextNodes: { node: Text; index: number }[],
+    newChildren: Node[],
+    _oldChildren: Node[]
+  ): void {
+    // For each unmatched old text node, try to find if its content appears
+    // inside new formatted elements
+    for (const oldTextItem of unmatchedOldTextNodes) {
+      const oldText = (oldTextItem.node.textContent || '').trim();
+      if (!oldText) continue;
+
+      // Look for new elements that contain this text
+      for (const newChild of newChildren) {
+        if (newChild.nodeType === Node.ELEMENT_NODE) {
+          const newElement = newChild as Element;
+          const newElementText = (newElement.textContent || '').trim();
+
+          // Check if the old text appears in the new element's text content
+          if (newElementText.includes(oldText)) {
+            // Calculate similarity to see if this is likely the same content
+            const similarity = this.calculateTextSimilarity(oldText, newElementText);
+
+            // If very similar (>80% match), treat as formatting change, not addition
+            if (similarity > 0.8) {
+              // Mark the old text as removed but with lower priority
+              replaceTextNodeWithWrapped(oldTextItem.node, 'removed', this.options);
+
+              // Instead of marking the whole new element as added,
+              // just mark the text content as changed/modified
+              const textNodes = this.getTextNodes(newElement);
+              textNodes.forEach((textNode) => {
+                if (textNode.textContent && textNode.textContent.trim() === oldText) {
+                  // Don't wrap this text - it's the same content
+                  return;
+                }
+              });
+
+              // Mark the new element as a formatting change rather than addition
+              if (
+                this.options.watchedTags?.includes('*') ||
+                this.options.watchedTags?.includes(newElement.tagName.toLowerCase())
+              ) {
+                // Use a different class for formatting changes
+                wrapElement(
+                  newElement,
+                  'diff-formatting-change',
+                  this.options.wrapperTag || 'span'
+                );
+              }
+
+              break; // Found a match, stop looking
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Helper method to get all text nodes within an element
+   */
+  private getTextNodes(element: Element): Text[] {
+    const textNodes: Text[] = [];
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+
+    let node;
+    while ((node = walker.nextNode())) {
+      textNodes.push(node as Text);
+    }
+
+    return textNodes;
   }
 }
 

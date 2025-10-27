@@ -304,7 +304,7 @@ function computeSimilarityScore(a: Element, b: Element): SimilarityScore {
 
   if (aText && bText) {
     if (aText === bText) {
-      score += 5; // Strong bonus for exact text match
+      score += 8; // Very strong bonus for exact text match, even if tags differ
     } else {
       // Enhanced text similarity for partial matches
       const aTokens = new Set(tokenizeForSimilarity(aText));
@@ -321,7 +321,10 @@ function computeSimilarityScore(a: Element, b: Element): SimilarityScore {
       // Calculate overlap percentage and give significant score for partial matches
       const overlapRatio = totalTokens > 0 ? textOverlap / totalTokens : 0;
 
-      if (overlapRatio >= 0.5) {
+      if (overlapRatio >= 0.8) {
+        // If 80%+ of words match, give very high similarity score
+        score += 6 + overlapRatio * 2;
+      } else if (overlapRatio >= 0.5) {
         // If 50%+ of words match, give substantial similarity score
         score += 3 + overlapRatio * 2;
       } else if (overlapRatio > 0) {

@@ -169,6 +169,38 @@ export function markDescendantTextNodes(
 }
 
 /**
+ * Traverse an element and mark all descendant elements with diff tracking attributes
+ * This ensures nested elements are properly counted in statistics
+ */
+export function markDescendantElements(element: Element, mode: 'added' | 'removed'): void {
+  // Use TreeWalker to efficiently traverse all descendant elements
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT, null);
+
+  const elements: Element[] = [];
+  let currentNode = walker.nextNode();
+
+  while (currentNode) {
+    elements.push(currentNode as Element);
+    currentNode = walker.nextNode();
+  }
+
+  // Mark each descendant element for statistics tracking
+  for (const descendantElement of elements) {
+    const tagLower = descendantElement.tagName.toLowerCase();
+
+    // Always set the data attribute for statistics tracking
+    if (mode === 'added') {
+      descendantElement.setAttribute('data-diff-added-tag', tagLower);
+    } else if (mode === 'removed') {
+      descendantElement.setAttribute('data-diff-removed-tag', tagLower);
+    }
+
+    // If this tag is being watched, we could add additional marking here
+    // For now, we focus on ensuring statistics tracking works correctly
+  }
+}
+
+/**
  * Create a DocumentFragment from diff tokens for a specific target view
  * 'old' view shows equal + removed tokens, 'new' view shows equal + added tokens
  */
