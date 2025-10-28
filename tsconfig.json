@@ -52,9 +52,7 @@
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*"],
   "exclude": [
     "node_modules",
     "dist",
@@ -62,7 +60,9 @@
     "**/*.test.ts",
     "**/*.spec.ts",
     "coverage",
-    "docs"
+    "docs",
+    "examples",
+    "playground"
   ],
   "ts-node": {
     "esm": true
