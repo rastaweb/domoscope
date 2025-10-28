@@ -1,7 +1,7 @@
 {
   "name": "@rastaweb/domoscope",
   "version": "1.0.0",
-  "description": "Advanced HTML diff engine with intelligent DOM comparison, configurable tracking, and comprehensive statistics",
+  "description": "Domoscope is an HTML diff engine with intelligent DOM comparison, configurable tracking, and comprehensive statistics",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
