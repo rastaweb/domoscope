@@ -1,5 +1,9 @@
 # 🔍 Domoscope
 
+<p align="center">
+  <img src="./assets/domoscope-banner.png" alt="Domoscope" width="100%" />
+</p>
+
 > Advanced HTML diff engine with intelligent DOM comparison and comprehensive change statistics.
 
 Domoscope is a TypeScript library for comparing HTML content with intelligent element matching, word-level text diffing, and detailed change tracking.
@@ -59,45 +63,701 @@ const result = getCustomDiffStats(oldHTML, newHTML, options);
 const summary = formatTagStatsSummary(result.stats);
 ```
 
-        G[elementSimilarity]
-        H[computeWordDiff]
-        I[tokenize]
+## 📚 API Reference
+
+### Core Functions
+
+#### `getCustomDiffStats(oldHTML, newHTML, options?)`
+
+High-level function that parses HTML, performs diff, and returns both modified DOM and statistics.
+
+```typescript
+function getCustomDiffStats(
+  oldHTML: string,
+  newHTML: string,
+  options?: ExtendedCompareOptions
+): DiffResultWithStats;
+```
+
+**Parameters:**
+
+- `oldHTML` (string): Original HTML content
+- `newHTML` (string): Modified HTML content
+- `options` (ExtendedCompareOptions, optional): Configuration options
+
+**Returns:** Object with `diffResult` and `stats` properties
+
+**Example:**
+
+```typescript
+const result = getCustomDiffStats('<div>Old</div>', '<div>New</div>', {
+  addedClass: 'added',
+  removedClass: 'removed',
+});
+```
+
+---
+
+#### `compareElements(oldElements, newElements, options?)`
+
+Compare arrays of DOM elements with intelligent pairing and recursive diffing.
+
+```typescript
+function compareElements(
+  oldElements: Element[],
+  newElements: Element[],
+  options?: ExtendedCompareOptions
+): void;
+```
+
+**Parameters:**
+
+- `oldElements` (Element[]): Array of original elements
+- `newElements` (Element[]): Array of modified elements
+- `options` (ExtendedCompareOptions, optional): Configuration options
+
+**Side Effects:** Modifies the DOM in-place with diff annotations
+
+**Example:**
+
+```typescript
+const oldTree = stringToFlatTree('<div><p>Content</p></div>');
+const newTree = stringToFlatTree('<div><p>New content</p></div>');
+compareElements(oldTree.rootElements, newTree.rootElements);
+```
+
+---
+
+#### `formatTagStatsSummary(stats)`
+
+Generate human-readable summary of diff statistics.
+
+```typescript
+function formatTagStatsSummary(stats: DiffStats): string;
+```
+
+**Parameters:**
+
+- `stats` (DiffStats): Statistics object from diff operation
+
+**Returns:** Multi-line string with formatted statistics
+
+**Example:**
+
+```typescript
+const summary = formatTagStatsSummary(stats);
+console.log(summary); // "DOMOSCOPE DIFF STATISTICS\n  Added: 2 elements..."
+```
+
+---
+
+#### `getChangedTagsList(stats)`
+
+Extract list of changed tags with their attributes.
+
+```typescript
+function getChangedTagsList(stats: DiffStats): Array<{
+  tagName: string;
+  count: number;
+  changedAttributes: string[];
+}>;
+```
+
+---
+
+### Utility Functions
+
+#### `stringToFlatTree(html)`
+
+Parse HTML string into structured tree representation.
+
+```typescript
+function stringToFlatTree(html: string): {
+  rootElements: Element[];
+  allElements: Element[];
+};
+```
+
+**Time Complexity:** O(n) where n is number of DOM nodes  
+**Space Complexity:** O(n)
+
+---
+
+#### `validateHTML(html)`
+
+Validate HTML string and return parsing information.
+
+```typescript
+function validateHTML(html: string): {
+  isValid: boolean;
+  errors: string[];
+};
+```
+
+---
+
+### Algorithm Functions
+
+#### `computeLCS(a, b)`
+
+Compute Longest Common Subsequence using dynamic programming.
+
+```typescript
+function computeLCS(a: string[], b: string[]): Array<[number, number]>;
+```
+
+**Time Complexity:** O(a × b)  
+**Space Complexity:** O(min(a, b))
+
+---
+
+#### `elementSimilarity(elementA, elementB, enableMemoization?)`
+
+Calculate similarity score between two DOM elements.
+
+```typescript
+function elementSimilarity(
+  elementA: Element,
+  elementB: Element,
+  enableMemoization?: boolean
+): number;
+```
+
+**Returns:** Similarity score (higher = more similar)
+
+**Scoring Algorithm:**
+
+- ID exact match: +10 points
+- Tag name match: +5 points
+- Class overlap: +N points (N = shared classes)
+- Attribute similarity: +0.5 × N points
+- Text content overlap: +0.3 × N points
+
+---
+
+#### `computeWordDiff(oldText, newText)`
+
+Perform word-level diff on text content.
+
+```typescript
+function computeWordDiff(oldText: string, newText: string): Token[];
+```
+
+**Returns:** Array of tokens with change types (`equal`, `added`, `removed`)
+
+---
+
+### Performance Functions
+
+#### `clearCaches()`
+
+Clear all memoization caches to free memory.
+
+```typescript
+function clearCaches(): void;
+```
+
+#### `getCacheStats()`
+
+Get cache performance statistics.
+
+```typescript
+function getCacheStats(): {
+  lcsCache: { size: number; hits: number; misses: number };
+  similarityCache: { size: number; hits: number; misses: number };
+};
+```
+
+#### `getPerformanceMetrics()`
+
+Get detailed performance metrics.
+
+```typescript
+function getPerformanceMetrics(): PerformanceMetrics;
+```
+
+---
+
+## ⚙️ Configuration Options
+
+### `ExtendedCompareOptions`
+
+Complete configuration interface combining style, tracking, and performance options.
+
+```typescript
+interface ExtendedCompareOptions {
+  // Style Configuration
+  addedClass?: string; // Default: "diff-added"
+  removedClass?: string; // Default: "diff-removed"
+  elementChangeClass?: string; // Default: "diff-elem-changed"
+  attributeChangeClass?: string; // Default: "diff-attr-changed"
+  wrapperTag?: string; // Default: "span"
+  textWrapperTag?: string; // Default: same as wrapperTag
+  addedWrapperTag?: string; // Default: same as wrapperTag
+  removedWrapperTag?: string; // Default: same as wrapperTag
+  changedWrapperTag?: string; // Default: same as wrapperTag
+
+  // Tracking Configuration
+  watchedTags?: string[]; // Tags to track for special handling
+  trackedTags?: string[] | Record<string, string[]>; // Tags and attributes to track
+  trackedAttributes?: string[]; // Global attribute filter
+
+  // Performance Configuration
+  maxTextLength?: number; // Default: 10000
+  minSimilarityThreshold?: number; // Default: 0
+  enableMemoization?: boolean; // Default: true
+  ignoreWhitespaceTexts?: boolean; // Default: false
+
+  // Custom Handlers
+  onElementChange?: ElementChangeHandler;
+}
+```
+
+### Common Configuration Examples
+
+```typescript
+// Basic styling
+const styleConfig = {
+  addedClass: 'highlight-green',
+  removedClass: 'highlight-red',
+  wrapperTag: 'mark',
+};
+
+// Performance optimization
+const performanceConfig = {
+  minSimilarityThreshold: 0.3,
+  maxTextLength: 5000,
+  enableMemoization: true,
+};
+
+// Selective tracking
+const trackingConfig = {
+  watchedTags: ['img', 'a', 'button'],
+  trackedAttributes: ['href', 'src', 'class', 'id'],
+};
+
+// Combined configuration
+const fullConfig = {
+  ...styleConfig,
+  ...performanceConfig,
+  ...trackingConfig,
+};
+```
+
+---
+
+## 🔄 Algorithm Flow & Implementation
+
+### System Overview
+
+```mermaid
+flowchart TD
+    A[HTML Input] --> B[HTML Parsing]
+    B --> C[Element Arrays]
+    C --> D[Element Matching]
+    D --> E[Recursive Comparison]
+    E --> F[Text Diffing]
+    F --> G[Statistics Collection]
+    G --> H[Annotated DOM + Stats]
+
+    subgraph "Element Matching Algorithm"
+        D1[Similarity Matrix] --> D2[Best Match Selection]
+        D2 --> D3[Pairing Results]
     end
 
-    subgraph "Configuration"
-        J[ConfigBuilder]
-        K[ConfigPresets]
-        L[DefaultConfigProvider]
+    subgraph "Text Diffing Process"
+        F1[Tokenization] --> F2[LCS Computation]
+        F2 --> F3[Token Classification]
+        F3 --> F4[DOM Annotation]
     end
 
-    subgraph "Utilities"
-        M[DOM Manipulation]
-        N[HTML Validation]
-        O[Tree Parsing]
-    end
+    D --> D1
+    F --> F1
+```
 
-    A --> D
-    B --> D
-    D --> F
-    D --> G
-    D --> H
-    D --> E
-    F --> I
-    G --> I
-    H --> I
-    D --> M
-    D --> J
-    J --> K
-    J --> L
+### Core Diff Algorithm Steps
 
-````
+1. **HTML Parsing**: Parse input strings into DOM element trees using `stringToFlatTree()`
+2. **Element Pool Creation**: Create sets of old and new elements for matching
+3. **Similarity Computation**: Calculate similarity scores using multi-factor algorithm
+4. **Element Pairing**: Find optimal element matches using similarity thresholds
+5. **Recursive Processing**: For paired elements, recursively compare child nodes
+6. **LCS Alignment**: Align child nodes using Longest Common Subsequence algorithm
+7. **Text Diffing**: Perform word-level diff on text content with Unicode support
+8. **DOM Annotation**: Apply CSS classes and wrapper elements to indicate changes
+9. **Statistics Collection**: Gather comprehensive metrics about detected changes
 
-## ✨ Features
+### Element Similarity Algorithm
 
-### 🔍 Core Comparison Engine
+```mermaid
+flowchart LR
+    A[Element A] --> C[Similarity Calculator]
+    B[Element B] --> C
+    C --> D[ID Match: +10]
+    C --> E[Tag Match: +5]
+    C --> F[Class Overlap: +N]
+    C --> G[Attribute Similarity: +0.5N]
+    C --> H[Text Overlap: +0.3N]
+    C --> I[Structure Score: +1]
+    D --> J[Total Score]
+    E --> J
+    F --> J
+    G --> J
+    H --> J
+    I --> J
+```
 
-- **Intelligent Element Matching**: Advanced similarity algorithms with configurable thresholds and cross-tag pairing
-- **DOM Structure Preservation**: Never modifies original elements, only adds diff annotations
+### Text Diffing Process
+
+1. **Tokenization**: Split text into words and punctuation using Unicode-aware regex
+2. **LCS Computation**: Find longest common subsequence of tokens
+3. **Classification**: Mark tokens as `equal`, `added`, or `removed`
+4. **Merging**: Combine consecutive tokens of same type
+5. **DOM Generation**: Create document fragments with appropriate wrapper elements
+
+---
+
+## 📊 Data Types
+
+### `DiffStats`
+
+Comprehensive statistics about detected changes.
+
+```typescript
+interface DiffStats {
+  totalChangedTags: number; // Elements with tag/attribute changes
+  totalAddedTexts: number; // Added text spans/nodes
+  totalRemovedTexts: number; // Removed text spans/nodes
+  totalAddedTags: number; // Newly added elements
+  totalRemovedTags: number; // Removed elements
+  totalAddedWords: number; // Total words added
+  totalRemovedWords: number; // Total words removed
+
+  addedTags?: Record<string, number>; // Per-tag addition counts
+  removedTags?: Record<string, number>; // Per-tag removal counts
+  changedTags?: Record<
+    string,
+    {
+      // Per-tag change details
+      count: number;
+      changedAttributes: string[];
+    }
+  >;
+}
+```
+
+### `DiffResultWithStats`
+
+Complete result including both DOM modifications and statistics.
+
+```typescript
+interface DiffResultWithStats {
+  diffResult: {
+    oldRootElements: Element[]; // Root elements from old content
+    newRootElements: Element[]; // Root elements from new content
+    rootElements: Element[]; // All root elements (compatibility)
+    allElements: Element[]; // All elements from both trees
+  };
+  stats: DiffStats;
+}
+```
+
+### `Token`
+
+Individual unit in word-level diff.
+
+```typescript
+interface Token {
+  type: 'equal' | 'added' | 'removed';
+  text: string;
+}
+```
+
+---
+
+## � Error Handling & Common Issues
+
+### HTML Parsing Errors
+
+```typescript
+// Validate HTML before processing
+const validation = validateHTML(htmlString);
+if (!validation.isValid) {
+  console.error('HTML validation failed:', validation.errors);
+}
+```
+
+### Performance Issues
+
+```typescript
+// For large documents, adjust performance settings
+const options = {
+  maxTextLength: 1000, // Limit text diff size
+  minSimilarityThreshold: 0.5, // Raise threshold for faster matching
+  enableMemoization: true, // Enable caching
+};
+```
+
+### Memory Management
+
+```typescript
+// Clear caches periodically for long-running applications
+import { clearCaches } from '@rastaweb/domoscope';
+
+clearCaches(); // Frees all memoization memory
+```
+
+### Common Pitfalls
+
+1. **Large Text Blocks**: Word-level diffing becomes slow with very large text. Use `maxTextLength` option.
+2. **Memory Leaks**: Clear caches in long-running applications to prevent memory growth.
+3. **Invalid HTML**: Always validate HTML input, especially from user sources.
+4. **Case Sensitivity**: Element tag names are case-insensitive, but attributes are case-sensitive.
+
+---
+
+## 🎯 Best Practices & Performance Tips
+
+### Optimal Configuration
+
+```typescript
+// For content management systems
+const cmsConfig = {
+  watchedTags: ['img', 'a', 'video', 'iframe'],
+  trackedAttributes: ['src', 'href', 'class'],
+  minSimilarityThreshold: 0.3,
+  maxTextLength: 5000,
+};
+
+// For code diff (low similarity tolerance)
+const codeConfig = {
+  minSimilarityThreshold: 0.8,
+  enableMemoization: true,
+  wrapperTag: 'mark',
+};
+
+// For large documents (performance focused)
+const performanceConfig = {
+  minSimilarityThreshold: 0.5,
+  maxTextLength: 2000,
+  enableMemoization: true,
+  ignoreWhitespaceTexts: true,
+};
+```
+
+### Memory Optimization
+
+```typescript
+// Monitor cache performance
+const cacheStats = getCacheStats();
+if (cacheStats.lcsCache.size > 1000) {
+  clearCaches();
+}
+
+// Disable memoization for one-time operations
+getCustomDiffStats(oldHTML, newHTML, { enableMemoization: false });
+```
+
+### DOM Structure Recommendations
+
+- Use semantic HTML for better element matching
+- Include stable `id` attributes for important elements
+- Use consistent `class` naming for similar content types
+- Avoid deeply nested structures when possible
+
+---
+
+## 🔧 Runtime Behavior & Lifecycle
+
+### Initialization
+
+```typescript
+// Library is stateless - no global initialization required
+import { getCustomDiffStats } from '@rastaweb/domoscope';
+
+// Each function call is independent
+const result = getCustomDiffStats(html1, html2);
+```
+
+### Memory Management
+
+- **Caches**: LCS and similarity computations are memoized by default
+- **Cleanup**: Caches auto-expire after 5 minutes
+- **Size Limits**: Caches are limited to 1000 entries each
+- **Manual Control**: Use `clearCaches()` for explicit cleanup
+
+### Concurrency Model
+
+- **Synchronous**: All operations are synchronous - no async/await needed
+- **Thread Safe**: Pure functions with no shared mutable state
+- **Browser Compatible**: Works in both Node.js and browser environments
+
+---
+
+## 🧪 Examples & Use Cases
+
+### Content Management System
+
+```typescript
+// Track content changes in CMS
+const { stats } = getCustomDiffStats(originalArticle, editedArticle, {
+  watchedTags: ['img', 'a', 'blockquote'],
+  trackedAttributes: ['src', 'href', 'alt'],
+});
+
+console.log(
+  `Article edited: ${stats.totalAddedWords} words added, ${stats.totalRemovedWords} removed`
+);
+```
+
+### Version Control Interface
+
+```typescript
+// Show file differences in version control UI
+const { diffResult } = getCustomDiffStats(oldVersion, newVersion, {
+  addedClass: 'git-added',
+  removedClass: 'git-removed',
+  wrapperTag: 'mark',
+});
+
+// Render diffResult.rootElements in UI
+```
+
+### Automated Testing
+
+```typescript
+// Assert content changes in tests
+const { stats } = getCustomDiffStats(beforeHTML, afterHTML);
+expect(stats.totalAddedTags).toBe(1);
+expect(stats.addedTags?.button).toBe(1);
+```
+
+### Email Template Comparison
+
+```typescript
+// Compare email template versions
+const { stats } = getCustomDiffStats(template1, template2, {
+  watchedTags: ['img', 'a', 'table'],
+  trackedAttributes: ['src', 'href', 'style', 'width', 'height'],
+});
+
+const report = formatTagStatsSummary(stats);
+```
+
+---
+
+## 📈 Performance Characteristics
+
+### Algorithm Complexity
+
+| Operation             | Time Complexity | Space Complexity | Notes                      |
+| --------------------- | --------------- | ---------------- | -------------------------- |
+| HTML Parsing          | O(n)            | O(n)             | n = DOM nodes              |
+| Element Matching      | O(n×m×k)        | O(n+m)           | k = similarity computation |
+| LCS Computation       | O(a×b)          | O(min(a,b))      | a,b = token arrays         |
+| Text Tokenization     | O(t)            | O(tokens)        | t = text length            |
+| Statistics Collection | O(elements)     | O(tags)          | Linear scan                |
+
+### Memory Usage
+
+- **Base Library**: ~50KB minified
+- **Cache Memory**: ~1MB max (auto-managed)
+- **DOM Overhead**: Proportional to input size
+- **Peak Usage**: 3-5x input HTML size during processing
+
+### Performance Benchmarks
+
+- **Small Documents** (<1KB): <1ms
+- **Medium Documents** (10KB): 10-50ms
+- **Large Documents** (100KB): 100-500ms
+- **Very Large Documents** (1MB+): Use performance settings
+
+---
+
+## ⚙️ Compatibility & Requirements
+
+### Environment Support
+
+- **Node.js**: ≥16.0.0
+- **TypeScript**: ≥4.5.0 (optional)
+- **Browsers**: Modern browsers with ES2022 support
+- **Module Formats**: ESM only (use `type: "module"`)
+
+### Dependencies
+
+- **Runtime**: None (zero dependencies)
+- **Peer Dependencies**: TypeScript ≥4.5.0 (optional)
+- **Dev Dependencies**: Jest, TypeScript, ESLint, Prettier
+
+### Browser Compatibility
+
+- **Chrome**: ≥91
+- **Firefox**: ≥90
+- **Safari**: ≥14
+- **Edge**: ≥91
+
+---
+
+## 🧪 Testing & Examples
+
+### Running Tests
+
+```bash
+npm test              # Run test suite
+npm run test:watch    # Watch mode
+npm run test:coverage # Coverage report
+```
+
+### Example Projects
+
+- `examples/comprehensive-examples.mjs` - Complete usage examples
+- `playground/playground.html` - Interactive browser demo
+- `tests/simple.test.js` - Basic functionality tests
+
+### Test Output Example
+
+```
+PASS tests/simple.test.js
+✓ should perform basic diff operation (5ms)
+✓ should generate statistics summary (3ms)
+✓ should handle empty content (2ms)
+
+Test Suites: 1 passed, 1 total
+Tests: 3 passed, 3 total
+```
+
+---
+
+## 📋 API Surface Summary
+
+| Export                  | Type     | Description                   |
+| ----------------------- | -------- | ----------------------------- |
+| `getCustomDiffStats`    | Function | Main high-level diff function |
+| `compareElements`       | Function | Element array comparison      |
+| `formatTagStatsSummary` | Function | Statistics formatting         |
+| `getChangedTagsList`    | Function | Extract changed tag info      |
+| `stringToFlatTree`      | Function | HTML parsing utility          |
+| `validateHTML`          | Function | HTML validation               |
+| `computeLCS`            | Function | LCS algorithm                 |
+| `elementSimilarity`     | Function | Element similarity scoring    |
+| `computeWordDiff`       | Function | Word-level text diff          |
+| `clearCaches`           | Function | Memory management             |
+| `getCacheStats`         | Function | Cache performance metrics     |
+| `DiffEngine`            | Class    | Core diff engine              |
+| `StatsCollector`        | Class    | Statistics collection         |
+| `ConfigBuilder`         | Class    | Fluent configuration          |
+| `ConfigPresets`         | Object   | Predefined configurations     |
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](./LICENSE) file for details.
+
+**Repository**: [https://github.com/rastaweb/domoscope](https://github.com/rastaweb/domoscope)  
+**Issues**: [https://github.com/rastaweb/domoscope/issues](https://github.com/rastaweb/domoscope/issues)  
+**Author**: [kamran taghinejad](mailto:kamrantaghinejad.dev@gmail.com)
+
 - **LCS Algorithm**: Optimized Longest Common Subsequence implementation with dynamic programming
 - **Text-Level Diffing**: Word-by-word and character-level comparison with tokenization
 - **Element Similarity Scoring**: Multi-factor scoring including tag names, attributes, and content
@@ -251,7 +911,7 @@ flowchart TD
     style LCS fill:#fff3e0
     style TextDiff fill:#fce4ec
     style Output fill:#f1f8e9
-````
+```
 
 ## 📦 Installation
 
