@@ -1,5 +1,5 @@
 {
-  "name": "domoscope",
+  "name": "@rastaweb/domoscope",
   "version": "1.0.0",
   "description": "Advanced HTML diff engine with intelligent DOM comparison, configurable tracking, and comprehensive statistics",
   "type": "module",
@@ -74,7 +74,8 @@
     "memoization",
     "lcs",
     "similarity",
-    "dom-analysis"
+    "dom-analysis",
+    "domoscope"
   ],
   "author": {
     "name": "kamran taghinejad",
@@ -84,12 +85,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/[username]/domoscope.git"
+    "url": "git+https://github.com/rastaweb/domoscope.git"
   },
   "bugs": {
-    "url": "https://github.com/[username]/domoscope/issues"
+    "url": "https://github.com/rastaweb/domoscope/issues"
   },
-  "homepage": "https://github.com/[username]/domoscope#readme",
+  "homepage": "https://github.com/rastaweb/domoscope#readme",
   "engines": {
     "node": ">=16.0.0"
   },
