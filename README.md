@@ -2005,28 +2005,6 @@ Domoscope is optimized for performance with several strategies:
 | 1,000    | ~45       | ~15         |
 | 10,000   | ~450      | ~120        |
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Setup
-
-```bash
-git clone https://github.com/[username]/domoscope.git
-cd domoscope
-npm install
-npm run build
-npm test
-```
-
-### Scripts
-
-- `npm run build` - Build the library
-- `npm test` - Run tests
-- `npm run lint` - Lint code
-- `npm run format` - Format code
-- `npm run docs` - Generate documentation
-
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
@@ -3237,45 +3215,6 @@ class PerformanceMonitor {
 ```
 
 ## 📖 Additional Resources
-
-- **[API Documentation](./docs/api.md)** - Complete API reference
-- **[Algorithm Details](./docs/algorithms.md)** - Deep dive into algorithms
-- **[Performance Guide](./docs/performance.md)** - Optimization techniques
-- **[Migration Guide](./docs/migration.md)** - Upgrading from v0.x
-- **[Contributing](./CONTRIBUTING.md)** - Development guidelines
-- **[Changelog](./CHANGELOG.md)** - Version history
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/rastaweb/domoscope.git
-cd domoscope
-
-# Install dependencies
-npm install
-
-# Build the library
-npm run build
-
-# Run tests
-npm test
-
-# Start playground
-npm run playground
-```
-
-### Code Quality Standards
-
-- **TypeScript**: Strict configuration with complete type safety
-- **Testing**: Comprehensive test coverage with Jest + JSDOM
-- **Linting**: ESLint + Prettier for consistent code style
-- **Documentation**: JSDoc comments for all public APIs
-- **Performance**: Benchmark tests for algorithm optimizations
 
 ## 📄 License
 
