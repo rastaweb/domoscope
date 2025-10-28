@@ -1,53 +1,64 @@
 # 🔍 Domoscope
 
-> Advanced HTML diff engine with intelligent DOM comparison, configurable tracking, and comprehensive statistics.
+> Advanced HTML diff engine with intelligent DOM comparison and comprehensive change statistics.
 
-[![npm version](https://badge.fury.io/js/domoscope.svg)](https://www.npmjs.com/package/domoscope)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.2+-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/domoscope?color=success)](https://bundlephobia.com/package/domoscope)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/rastaweb/domoscope/ci.yml?branch=main)](https://github.com/rastaweb/domoscope/actions)
-[![Downloads](https://img.shields.io/npm/dm/domoscope?color=blue)](https://www.npmjs.com/package/domoscope)
-[![Code Quality](https://img.shields.io/codefactor/grade/github/rastaweb/domoscope?label=code%20quality)](https://www.codefactor.io/repository/github/rastaweb/domoscope)
-[![Playground](https://img.shields.io/badge/🎮_Try_Online-Playground-ff69b4)](https://rastaweb.github.io/domoscope/playground.html)
+Domoscope is a TypeScript library for comparing HTML content with intelligent element matching, word-level text diffing, and detailed change tracking.
 
-**Domoscope** is a sophisticated TypeScript library for comparing HTML content that preserves DOM structure while providing intelligent element matching, configurable change tracking, and comprehensive statistics. Perfect for content management systems, version control interfaces, collaborative editing tools, and automated testing frameworks.
+## � Installation
 
-## 📋 Table of Contents
+```bash
+npm install @rastaweb/domoscope
+```
 
-- [🏗️ Architecture Overview](#️-architecture-overview)
-- [✨ Features](#-features)
-- [🔬 Algorithm Flow Diagram](#-algorithm-flow-diagram)
-- [📦 Installation](#-installation)
-- [🚀 Quick Start](#-quick-start)
-- [🚀 Performance & Optimization](#-performance--optimization)
-- [📚 Detailed Algorithm Documentation](#-detailed-algorithm-documentation)
-- [📚 API Reference](#-api-reference)
-- [🎮 Interactive Playground](#-interactive-playground)
-- [🧪 Advanced Examples](#-advanced-examples)
-- [📖 Additional Resources](#-additional-resources)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
+```bash
+yarn add @rastaweb/domoscope
+```
 
-## 🏗️ Architecture Overview
+```bash
+pnpm add @rastaweb/domoscope
+```
 
-Domoscope follows a **modular architecture** with clean separation of concerns, implementing **SOLID principles** and **Dynamic Programming patterns** for optimal performance:
+**Requirements**: Node.js ≥16.0.0, TypeScript ≥4.5.0 (optional)
 
-```mermaid
-graph TB
-    subgraph "Public API Layer"
-        A[getCustomDiffStats]
-        B[compareElements]
-        C[formatTagStatsSummary]
-    end
+## 🚀 Quick Start
 
-    subgraph "Core Engine"
-        D[DiffEngine]
-        E[StatsCollector]
-    end
+### Basic Usage
 
-    subgraph "Algorithm Layer"
-        F[computeLCS]
+```typescript
+import { getCustomDiffStats } from '@rastaweb/domoscope';
+
+const oldHTML = '<div><p>Original content</p></div>';
+const newHTML = '<div><p>Modified content</p><span>Added content</span></div>';
+
+const { diffResult, stats } = getCustomDiffStats(oldHTML, newHTML);
+
+console.log(`Added ${stats.totalAddedTags} elements`);
+console.log(`Removed ${stats.totalRemovedTags} elements`);
+console.log(`Changed ${stats.totalChangedTags} elements`);
+```
+
+### TypeScript Usage
+
+```typescript
+import {
+  getCustomDiffStats,
+  compareElements,
+  formatTagStatsSummary,
+  type DiffStats,
+  type ExtendedCompareOptions,
+} from '@rastaweb/domoscope';
+
+const options: ExtendedCompareOptions = {
+  addedClass: 'highlight-added',
+  removedClass: 'highlight-removed',
+  watchedTags: ['img', 'a', 'button'],
+  minSimilarityThreshold: 0.3,
+};
+
+const result = getCustomDiffStats(oldHTML, newHTML, options);
+const summary = formatTagStatsSummary(result.stats);
+```
+
         G[elementSimilarity]
         H[computeWordDiff]
         I[tokenize]
@@ -78,7 +89,8 @@ graph TB
     D --> J
     J --> K
     J --> L
-```
+
+````
 
 ## ✨ Features
 
@@ -239,7 +251,7 @@ flowchart TD
     style LCS fill:#fff3e0
     style TextDiff fill:#fce4ec
     style Output fill:#f1f8e9
-```
+````
 
 ## 📦 Installation
 
