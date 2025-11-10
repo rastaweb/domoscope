@@ -48,7 +48,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
   // Map to store element pairs for linking
   const elementPairsRef = useRef<Map<string, { old: Element; new: Element }>>(new Map());
-  const [hoveredPairId, setHoveredPairId] = useState<string | null>(null);
+  const [, setHoveredPairId] = useState<string | null>(null);
 
   useEffect(() => {
     processDiff();

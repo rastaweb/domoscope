@@ -550,6 +550,7 @@ body {
 
 /* Attribute changed */
 .diff-attribute-changed {
+  display: inline-block;
   border: 3px solid #3b82f6;
   border-radius: 6px;
   padding: 8px;
