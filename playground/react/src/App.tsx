@@ -2,9 +2,10 @@ import { useState } from 'react';
 import './App.css';
 import type { ExtendedCompareOptions } from '@rastaweb/domoscope';
 
-import { oldContent, newContent } from './constants/diffContent';
 import { DiffViewer } from './components/DiffViewer';
 import { DiffControls } from './components/DiffControls';
+import { oldContent } from './constants/oldContent';
+import { newContent } from './constants/newContent';
 
 function App() {
   const [diffOptions, setDiffOptions] = useState<Partial<ExtendedCompareOptions>>({
