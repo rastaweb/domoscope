@@ -1,35 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useRef } from 'react';
+import './App.css';
+
+import { oldContent as _oldContent } from './constants/oldContent';
+import { newContent as _newContent } from './constants/newContent';
+import { useDiff } from './hooks/useDiff';
+import { useRender } from './hooks/useRender';
+import { Stats } from './components/Stats';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { diffResult, stats } = useDiff(_oldContent, _newContent);
+  console.log(stats);
+
+  const oldContentRef = useRef<HTMLElement>(null);
+  const newContentRef = useRef<HTMLElement>(null);
+  useRender(diffResult.oldRootElements, oldContentRef);
+  useRender(diffResult.newRootElements, newContentRef);
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <Stats stats={stats} />
+      <div className="grid grid-cols-2 gap-3 divide-x-2 divide-amber-700">
+        <div className="p-3">
+          <div className="p-2 bg-zinc-300 rounded-lg mb-4">
+            <h1 className="text-2xl font-black">محتوای جدید</h1>
+          </div>
+          <pre className="whitespace-pre-wrap **:font-semibold text-lg">
+            <bdi ref={newContentRef}></bdi>
+          </pre>
+        </div>
+        <div className="p-3">
+          <div className="p-2 bg-zinc-300 rounded-lg mb-4">
+            <h1 className="text-2xl font-black">محتوای قبلی</h1>
+          </div>
+          <pre className="whitespace-pre-wrap **:font-semibold text-lg">
+            <bdi ref={oldContentRef}></bdi>
+          </pre>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
