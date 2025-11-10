@@ -736,3 +736,214 @@ body {
     box-shadow: none;
   }
 }
+
+/* ==================== WEBSTORM/PHPSTORM STYLE ENHANCEMENTS ==================== */
+
+/* Image change indicators */
+.img-change-indicator {
+  display: inline-block;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 2px solid #fbbf24;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #92400e;
+}
+
+img[data-changed-attrs] {
+  outline: 3px solid #fbbf24 !important;
+  outline-offset: 2px;
+  border-radius: 4px;
+  animation: pulse-outline 2s ease-in-out infinite;
+}
+
+@keyframes pulse-outline {
+  0%,
+  100% {
+    outline-color: #fbbf24;
+    outline-width: 3px;
+  }
+  50% {
+    outline-color: #f59e0b;
+    outline-width: 4px;
+  }
+}
+
+/* Link change badge */
+.link-change-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 1rem;
+  animation: bounce-icon 1s ease-in-out infinite;
+}
+
+@keyframes bounce-icon {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Enhanced tooltips with better visibility */
+.has-tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.has-tooltip:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: tooltip-fade-in 0.2s ease-out;
+}
+
+.has-tooltip:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  border: 6px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  pointer-events: none;
+  animation: tooltip-fade-in 0.2s ease-out;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Linked highlighting for scroll sync */
+[data-pair-id] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Visibility-based highlighting (IntersectionObserver) */
+[data-pair-id].is-visible {
+  position: relative;
+}
+
+[data-pair-id].paired-visible {
+  background: rgba(96, 165, 250, 0.08) !important;
+  box-shadow: inset 0 0 0 2px rgba(96, 165, 250, 0.3);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Hover-based linked highlighting */
+[data-pair-id].hover-linked {
+  background: rgba(251, 191, 36, 0.15) !important;
+  box-shadow: inset 0 0 0 3px rgba(251, 191, 36, 0.5);
+  border-radius: 6px;
+  transform: scale(1.01);
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+/* Line markers for added/removed content */
+.line-marker {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.added-marker {
+  background: #10b981;
+  color: white;
+}
+
+.removed-marker {
+  background: #ef4444;
+  color: white;
+}
+
+.added-line {
+  position: relative;
+  border-right: 4px solid #10b981;
+  padding-right: 8px;
+  margin: 4px 0;
+}
+
+.removed-line {
+  position: relative;
+  border-right: 4px solid #ef4444;
+  padding-right: 8px;
+  margin: 4px 0;
+}
+
+/* Change badge for modified elements */
+.change-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba(251, 191, 36, 0.2);
+  border: 1px solid #fbbf24;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 4px;
+}
+
+/* Smooth scroll behavior */
+.diff-content {
+  scroll-behavior: auto; /* Controlled by JavaScript for better sync */
+}
+
+/* Enhanced focus states for accessibility */
+[data-pair-id]:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Loading animation for diff processing */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.processing-indicator {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+}
